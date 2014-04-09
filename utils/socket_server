@@ -1,0 +1,83 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Author:    Leo XU     <leopallas@gmail.com>
+# Version:   1.0
+# Create On: Sun Apr  6 00:21:19 2014
+# Copyright 2014 LEO
+
+import socket
+import sys
+from thread import *
+
+HOST = ''
+PORT = 8888
+try:
+    """
+    family参数代表地址家族，可为AF_INET或AF_UNIX。AF_INET家族包括Internet地址，AF_UNIX家族用于同一台机器上的进程间通信。
+    type参数代表套接字类型，可为SOCK_STREAM(流套接字)和SOCK_DGRAM(数据报套接字)。
+    SOCK_DGRAM 用于 UDP 通讯协议，UDP 通讯是非连接
+    """
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  #创建一个socket实例
+    print socket.gethostname()  #获取当前主机名
+except socket.error, msg:
+    print 'Failed to create socket. Error code: ' + str(msg[0]) + ' , Error message : ' + msg[1]
+    sys.exit()
+print 'Socket Created'
+
+try:
+    s.bind((HOST, PORT))
+except socket.error, msg:
+    print 'Bind failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
+    sys.exit()
+print 'Socket bind complete'
+
+s.listen(10)
+print 'Socket now listening'
+
+# #now keep talking with the client
+# while 1:
+#     #wait to accept a connection - blocking call
+#     conn, addr = s.accept()
+#     #display client information
+#     print 'Connected with ' + addr[0] + ':' + str(addr[1])
+#
+#     #now keep talking with the client
+#     data = conn.recv(1024)
+#     reply = 'OK...' + data
+#     if not data:
+#         break
+#
+#     conn.sendall(reply)
+#
+# conn.close()
+# s.close()
+
+
+#Function for handling connections. This will be used to create threads
+def clientthread(conn):
+    #Sending message to connected client
+    conn.send('Welcome to the server. Type something and hit enter\n')  #send only takes string
+
+    #infinite loop so that function do not terminate and thread do not end.
+    while True:
+        #Receiving from client
+        data = conn.recv(1024)
+        reply = 'OK...' + data
+        if not data:
+            break
+
+        conn.sendall(reply)
+
+    #came out of loop
+    conn.close()
+
+#now keep talking with the client
+while 1:
+    #wait to accept a connection - blocking call
+    conn, addr = s.accept()
+    print 'Connected with ' + addr[0] + ':' + str(addr[1])
+
+    #start new thread takes 1st argument as a function name to be run, second is the tuple of arguments to the function.
+    start_new_thread(clientthread, (conn,))
+
+s.close()
