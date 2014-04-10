@@ -4,9 +4,9 @@
 # Version:  1.0
 # Create:   2014-04-05 12:06
 # Copyright 2014 LEO
-from collections import defaultdict
 
-import os
+import time
+
 import tornado.ioloop
 import tornado.escape
 import tornado.web
@@ -14,21 +14,21 @@ import tornado.httpserver
 import tornado.log
 from tornado.options import define, options
 
-import time
+import pymongo
+# from pymongo import MongoClient
+from hausung import utils
+
 
 define("port", default=8888, help="run on the given port", type=int)
+define("mongodb_host", default="127.0.0.1", help="mongodb  host")
+define("mongodb_port", default=27017, help="mongodb port host")
+#
+# MONGODB_DB_URL = 'mongodb://localhost:27017/'
+# MONGODB_DB_NAME = 'lifestyle'
+# client = MongoClient(MONGODB_DB_URL)
+# db = client[MONGODB_DB_NAME]
 
-import pymongo
-from pymongo import MongoClient
-import json
-from bson import json_util
-from bson.objectid import ObjectId
-
-MONGODB_DB_URL = 'mongodb://localhost:27017/'
-MONGODB_DB_NAME = 'lifestyle'
-
-client = MongoClient(MONGODB_DB_URL)
-db = client[MONGODB_DB_NAME]
+error = {10000: "u", 10001: "mm"}
 
 
 class Application(tornado.web.Application):
@@ -107,11 +107,10 @@ class GetAuthCodeHandler(BaseHandler):
                 return
             else:
                 print register_doc['registerInd']
-                authcode = '1234567'
-                coll.update({'phone': phone}, {"$set": {'authCode': authcode}})
+                coll.update({'phone': phone}, {"$set": {'authCode': utils.gen_auth_code()}})
         else:
-            authcode = '123456'
-            register_doc = {'phone': phone, 'authCode': authcode, 'createDt': time.time(), 'registerInd': False}
+            register_doc = {'phone': phone, 'authCode': utils.gen_auth_code(), 'createDt': time.time(),
+                            'registerInd': False}
             coll.insert(register_doc)
             del register_doc['_id']
             self.write(register_doc)
@@ -144,13 +143,34 @@ class RegisterHandler(BaseHandler):
             now = time.time()
             account_doc = {'username': phone,
                            'nickname': nickname,
-                           'password': register['password'],
+                           'password': utils.sha1(register['password']),
                            'createDt': now,
                            'updateDt': now}
             self.db.account.insert(account_doc)
             del account_doc["_id"]
             # json_string = json_util.dumps(account_doc)
             self.write(account_doc)
+
+
+class LoginHandler(BaseHandler):
+    def post(self):
+        data = self.get_data
+        if self.get_status() != 200:
+            return
+        account = data['json']
+        if account['username'] or account['password']:
+            self.set_status(10005, 'username or password is not empty')
+            return
+        coll = self.db.account
+        account_doc = coll.find_one({'username': account['username']})
+        if account_doc:
+            self.set_status(10005, 'user is not register')
+            return
+        if account_doc['password'] != utils.sha1(account['password']):
+            self.set_status(10006, 'password is wrong')
+
+        del account_doc["_id"]
+        self.write(account_doc)
 
 
 def main():
