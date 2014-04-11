@@ -88,5 +88,15 @@ class LoginHandler(BaseHandler):
         if account_doc['password'] != utils.sha1(account['password']):
             self.response_status(USER_PASSWORD_ERROR)
 
-        del account_doc["_id"]
+        authkey = utils.gen_auth_key()
+        coll2 = self.db.authenticationKey
+        if account_doc['authenticationKey']:
+            coll.update({'_id': account_doc['_id']}, {'$set': {'authenticationKey': authkey}})
+            coll2.remove({'secretToken': account_doc['authenticationKey']['secretToken']})
+            coll2.insert({'secretToken': authkey[0], 'signatureKey': authkey[1]})
+        else:  #第一次登录
+            coll.update({'_id': account_doc['_id']}, {'$push': {'authenticationKey': authkey}})
+            coll2.insert({'secretToken': authkey[0], 'signatureKey': authkey[1]})
+
+        del account_doc['_id']
         self.write(account_doc)
