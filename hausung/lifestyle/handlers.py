@@ -37,7 +37,8 @@ class GetAuthCodeHandler(BaseHandler):
 
 class RegisterHandler(BaseHandler):
     def post(self):
-        data = self.get_data
+        self.body_json
+        data = {}
         if self.get_status() != 200:
             return
         register = data['json']

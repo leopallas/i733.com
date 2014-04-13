@@ -16,6 +16,20 @@ USER_PASSWORD_ERROR = (10007, 'password is wrong')
 
 URL_PARAMETERS_NOT_CORRECT = (10008, 'parameters of url not correct')
 
+errorcodes = {
+    9000: 'Content-Type is not application/json',
+
+    10000: 'Decode json error',
+    10001: 'Phone No. is already register',
+    10002: 'Phone No. is not pair with auth code',
+    10003: 'Auth Code is not correct',
+    10004: 'Auth Code is already expired',
+    10005: 'Username or password is not empty',
+    10006: 'User is not register',
+    10007: 'Password is wrong',
+    10008: 'Parameters of url not correct'
+}
+
 responses = {
     100: 'Continue',
     101: 'Switching Protocols',

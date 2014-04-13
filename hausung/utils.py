@@ -87,9 +87,10 @@ def main():
     u = '2d157330-35cc-426c-b2c5-64f410be1bdf'
     key = gen_auth_key()
     print key
-    print gen_auth_key()
-
-    print signature(key[1], 'command=deployVirtualMachine&serviceOfferingId=1&diskOfferingId=1&templateId=2')
+    sign = signature(key[1], 'command=deployVirtualMachine&serviceOfferingId=1&diskOfferingId=1&templateId=2')
+    from urllib import quote
+    print quote(sign)
+    print quote(key[0])
 
     # des.setKey(os.urandom(24))
     # print des.getKey()
