@@ -9,6 +9,6 @@ from handlers import GetAuthCodeHandler
 from handlers import RegisterHandler
 
 url = [
-    (r"/get-auth-code", GetAuthCodeHandler),
+    (r"/device/barter/get-barter-categories", GetAuthCodeHandler),
     (r"/register", RegisterHandler),
 ]

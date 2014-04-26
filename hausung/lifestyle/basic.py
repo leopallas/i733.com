@@ -6,15 +6,17 @@
 # Copyright 2014 LEO
 
 import tornado.ioloop
-import tornado.escape
+from tornado.escape import url_unescape, json_decode
 import tornado.web
 import tornado.httpserver
-import tornado.log
+from tornado.log import gen_log
+from tornado.web import MissingArgumentError
+from tornado.web import HTTPError
 
-import constants
-from constants import ERR_JSON, URL_PARAMETERS_NOT_CORRECT
-
-from urllib import quote
+from hausung import utils
+import base64
+import hmac
+import hashlib
 
 
 class BaseHandler(tornado.web.RequestHandler):
@@ -29,21 +31,44 @@ class BaseHandler(tornado.web.RequestHandler):
         return self.application.db
 
     def initialize(self):
-        data = {}
-        args = self.request.query_arguments
-        for a in args:
-            data[a] = self.get_argument(a)
-        if data['tm'] is None or data['nonce'] is None or data['au'] is None or data['tkn'] is None:
-            self.send_error(10008)
-        uri = '%s+%s+%s+%s' % (self.request.method, self.request.protocol, self.request.path, self.request.query)
-        uri = uri.replace('&au=' + quote(data['au']), '')
-        uri = uri.replace('&tkn=' + quote(data['tkn']), '')
-        print uri
+        pass
 
     def prepare(self):
-        action = self.request.path.split('/')[-1]
-        if action not in self.supported_path:
-            self.send_response_error(400)
+        args = self.request.query_arguments
+        if not args.get('tm') or not args.get('nonce') or not args.get('au') or not args.get('tkn'):
+            gen_log.debug('Missing parameter tm or nonce or au or tkn')
+            raise MissingArgumentError('tm or nonce or au or tkn')
+
+        data = {}
+        for a in args:
+            data[a] = self.get_argument(a)
+        #根据SECRET_TOKEN从数据库中取得签名的Key
+        authkey = self.db.get("SELECT SIGNATURE_KEY FROM auth_key where SECRET_TOKEN = %s", data['tkn'])
+        if not authkey:
+            raise HTTPError(400)
+
+        # 验证签名
+        uri = '%s+%s+%s+%s' % (
+            self.request.method, self.request.protocol, self.request.path, url_unescape(self.request.query))
+        uri = uri.replace('&au=' + data['au'], '')
+        uri = uri.replace('&tkn=' + data['tkn'], '')
+        sign = utils.signature(authkey['SIGNATURE_KEY'], uri)
+        if sign != data['au']:
+            raise HTTPError(400)
+            # action = self.request.path.split('/')[-1]
+            # if action not in self.supported_path:
+            #     self.send_response_error(400)
+
+
+    # def signature(self, key, text):
+    #     if isinstance(key, unicode):
+    #         key = str(key)
+    #
+    #     key = base64.b64decode(key)
+    #     h = hmac.new(key, text.encode('utf-8'), hashlib.sha1)
+    #     my_signature = base64.b64encode(h.digest()).strip()
+    #     return my_signature
+
 
     @property
     def body_json(self):
@@ -52,30 +77,15 @@ class BaseHandler(tornado.web.RequestHandler):
             content_type = self.request.headers['Content-Type']
             if content_type == 'application/json':
                 try:
-                    json = tornado.escape.json_decode(self.request.body)
+                    json = json_decode(self.request.body)
                 except ValueError, e:
-                    tornado.log.LogFormatter('decode track data error. e=%s' % e)
-                    # self.send_response_error(10000)
-                    self.send_response_error(10000)
+                    # tornado.log.LogFormatter('decode track data error. e=%s' % e)
+                    gen_log.debug('decode track data error. e=%s' % e)
+                #     error_info = {'my_exc_info': 'decode track data error. e=%s' % e, 'des': '参数有误！',
+                # 'reason': ['参数有误！'], 'next_url': '/'}
+                #     self.send_error(400, **error_info)
+                    raise HTTPError(400)
             else:
-                self.send_response_error(9000)
-            # elif content_type in ('application/x-www-form-urlencoded', 'multipart/form-data'):
-            #     args3 = self.request.body_arguments
-            #     for a in args3:
-            #         data[a] = self.get_argument(a)
-
+                gen_log.debug('content-type is not application/json.')
+                raise HTTPError(400)
         return json
-
-    # @property
-    def send_response_error(self, code):
-        reason = constants.errorcodes.get(code, 'Unknown')
-        self.set_status(code, reason)
-    
-    # @property
-    def response_status(self, code=(500, 'Server Error!')):
-        self.set_status(code[0], code[1])
-
-    # @property
-    # def response_status(self, status_code=500):
-    #     reason = constants.responses.get(status_code, 'Unknown')
-    #     self.status_code(status_code, reason)

@@ -27,7 +27,8 @@ errorcodes = {
     10005: 'Username or password is not empty',
     10006: 'User is not register',
     10007: 'Password is wrong',
-    10008: 'Parameters of url not correct'
+    10008: 'Parameters of url not correct',
+    10009: 'Token is not correct'
 }
 
 responses = {
@@ -76,4 +77,16 @@ responses = {
     503: 'Service Unavailable',
     504: 'Gateway Timeout',
     505: 'HTTP Version Not Supported',
+
+    9000: 'Content-Type is not application/json',
+    10000: 'Decode json error',
+    10001: 'Phone No. is already register',
+    10002: 'Phone No. is not pair with auth code',
+    10003: 'Auth Code is not correct',
+    10004: 'Auth Code is already expired',
+    10005: 'Username or password is not empty',
+    10006: 'User is not register',
+    10007: 'Password is wrong',
+    10008: 'Parameters of url not correct',
+    10009: 'Token is not correct'
 }

@@ -73,14 +73,24 @@ def gen_auth_key(u=None):
 
 
 def signature(key, text):
-    h = hmac.new(key, text, hashlib.sha1)
-    sig = base64.b64encode(h.digest()).strip()
-    return sig
+    if isinstance(key, unicode):
+        key = str(key)
+
+    key = base64.b64decode(key)
+    h = hmac.new(key, text.encode('utf-8'), hashlib.sha1)
+    my_signature = base64.b64encode(h.digest()).strip()
+    return my_signature
 
 import os
 
 
 def main():
+    print 'zvCVb5B01qgCo2OxgZBQGie7yAY='
+    # uri = 'GET+http+/device/barter/get-barter-categories+tm=1397705800365&nonce=-131075622'
+    uri = 'GET+http+/device/barter/get-barter-categories+tm=1397705800365&nonce=-131075622'
+
+    key = {'SIGNATURE_KEY': u'iu+SAZ2wj0A='}
+    print signature(key['SIGNATURE_KEY'], uri)
 
     # key = ElGamal.generate(100, Random.new().read)
     # print key
