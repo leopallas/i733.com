@@ -13,8 +13,9 @@ from tornado.log import app_log, gen_log
 from tornado.web import MissingArgumentError
 from tornado.web import HTTPError
 
-import util
-import constants
+from hausung.campus import util
+from hausung.campus.model.register import RegisterModel, CommonModel
+import errorcodes
 
 
 class AuthBaseHandler(tornado.web.RequestHandler):
@@ -39,10 +40,9 @@ class AuthBaseHandler(tornado.web.RequestHandler):
         for a in args:
             data[a] = self.get_argument(a)
         #根据SECRET_TOKEN从数据库中取得签名的Key
-        authkey = self.db.get("SELECT SIGNATURE_KEY FROM auth_key where SECRET_TOKEN = %s", data['tkn'])
+        authkey = self.db.get("SELECT SIGNATURE_KEY, USR_ID FROM auth_key where SECRET_TOKEN = %s", data['tkn'])
         if not authkey:
             raise HTTPError(400)
-
             # self.response_status(400)
         # 验证签名
         uri = '%s+%s+%s+%s' % (
@@ -52,6 +52,7 @@ class AuthBaseHandler(tornado.web.RequestHandler):
         sign = util.signature(authkey['SIGNATURE_KEY'], uri)
         if sign != data['au']:
             raise HTTPError(400)
+        self.usr_id = authkey['USR_ID']
 
 
     @property
@@ -77,7 +78,6 @@ class AuthBaseHandler(tornado.web.RequestHandler):
 
     @property
     def comm_model(self):
-        from model.register import CommonModel
         return CommonModel(self.application.db)
 
     def response_status(self, code=(500, 'Server Error!')):
@@ -100,7 +100,6 @@ class BaseHandler(tornado.web.RequestHandler):
 
     @property
     def register_model(self):
-        from model.register import RegisterModel
         return RegisterModel(self.application.db, self.application.db_auth)
 
     def initialize(self):

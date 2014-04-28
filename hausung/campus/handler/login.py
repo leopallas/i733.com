@@ -4,14 +4,15 @@
 # Version:  1.0
 # Create:   2014-04-10 15:39
 # Copyright 2014 LEO
-from time import time
+import time
 from datetime import datetime, timedelta
 
 from tornado.web import MissingArgumentError
-import util
-from basic import BaseHandler
 from bson.objectid import ObjectId
-from constants import PHONE_ALREADY_REGISTER, PHONE_NOT_PAIR_AUTH_CODE, AUTH_CODE_NOT_CORRECT, AUTH_CODE_EXPIRED, \
+
+from hausung.campus import util
+from basic import BaseHandler
+from errorcodes import PHONE_ALREADY_REGISTER, PHONE_NOT_PAIR_AUTH_CODE, AUTH_CODE_NOT_CORRECT, AUTH_CODE_EXPIRED, \
     USERNAME_EMPTY, PASSWORD_ERROR
 
 
@@ -119,7 +120,7 @@ class LoginHandler(BaseHandler):
             "openShopInd": user_extend['OPEN_SHOP_IND'],
             "token": authkey[0],
             "key": authkey[1],
-            "sdt": int(time.time)
+            "sdt": int(time.time())
         }
 
         if user_extend['COM_ID']:

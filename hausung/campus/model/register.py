@@ -75,3 +75,12 @@ class CommonModel:
 
     def bundle_community(self, com_id, usr_id):
         self._db.execute('UPDATE user_extend SET COM_ID=%s WHERE USR_ID=%s', com_id, usr_id)
+
+    def get_districts(self):
+        self._db.query('''
+                SELECT a.ARE_ID, CONCAT('成都市, ', a.ARE_NAME) as ARE_NAME, c.COM_ID, c.COM_NAME
+                FROM AREA a
+                INNER JOIN (community c)
+                ON (c.ARE_ID = a.ARE_ID and c.COM_STATUS = 2)
+                WHERE a.ARE_PARENT_ID = '3001'
+                AND a.ARE_STATUS = 2''')
