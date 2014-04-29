@@ -24,8 +24,6 @@ class GetDistrictsHandler(AuthBaseHandler):
 
     def get(self):
         records = self.comm_model.get_districts()
-        community_list = []
-        for r in records:
-            community_list.append({"comId": r['COM_ID'], "comName": r['COM_NAME']})
-        j = json_encode([{"districtName": records[0]['ARE_NAME'], "communities": community_list}])
+        community_list = [{'comId': r['COM_ID'], 'comName': r['COM_NAME']} for r in records]
+        j = json_encode([{'districtName': records[0]['ARE_NAME'], 'communities': community_list}])
         self.write(j)
