@@ -77,7 +77,7 @@ class CommonModel:
         self._db.execute('UPDATE user_extend SET COM_ID=%s WHERE USR_ID=%s', com_id, usr_id)
 
     def get_districts(self):
-        self._db.query('''
+        return self._db.query('''
                 SELECT a.ARE_ID, CONCAT('成都市, ', a.ARE_NAME) as ARE_NAME, c.COM_ID, c.COM_NAME
                 FROM AREA a
                 INNER JOIN (community c)

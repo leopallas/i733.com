@@ -15,17 +15,15 @@ from tornado.web import HTTPError
 
 from hausung.campus import util
 from hausung.campus.model.register import RegisterModel, CommonModel
-import errorcodes
 
 
 class AuthBaseHandler(tornado.web.RequestHandler):
-    SUPPORTED_METHODS = ("POST", "DELETE", "PATCH", "PUT", "OPTIONS")
-
     def __init__(self, application, request, **kwargs):
         super(AuthBaseHandler, self).__init__(application, request, **kwargs)
         # self.supported_path = ['register', 'get-auth-code']
         #set response header name and value.
         self.set_header('Content-Type', 'application/json')
+        self.usr_id = None
 
     def initialize(self):
         pass
@@ -54,7 +52,6 @@ class AuthBaseHandler(tornado.web.RequestHandler):
             raise HTTPError(400)
         self.usr_id = authkey['USR_ID']
 
-
     @property
     def body_json(self):
         if self.request.method in self.SUPPORTED_METHODS:
@@ -71,6 +68,8 @@ class AuthBaseHandler(tornado.web.RequestHandler):
             else:
                 gen_log.error('content-type is not application/json.')
                 raise HTTPError(400)
+        else:
+            raise HTTPError(405)
 
     @property
     def db(self):
@@ -79,6 +78,10 @@ class AuthBaseHandler(tornado.web.RequestHandler):
     @property
     def comm_model(self):
         return CommonModel(self.application.db)
+
+    @property
+    def get_usr_id(self):
+        return self.usr_id
 
     def response_status(self, code=(500, 'Server Error!')):
         print code

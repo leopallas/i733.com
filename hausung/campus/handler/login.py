@@ -8,6 +8,7 @@ import time
 from datetime import datetime, timedelta
 
 from tornado.web import MissingArgumentError
+from tornado.escape import json_encode
 from bson.objectid import ObjectId
 
 from hausung.campus import util
@@ -111,7 +112,7 @@ class LoginHandler(BaseHandler):
             else:
                 server['https'] = False
 
-        login_result = {
+        result = {
             "usrId": user_extend['USR_ID'],
             "nickname": user_extend['USR_NICKNAME'],
             "usrType": user['USR_TYPE'],
@@ -122,11 +123,8 @@ class LoginHandler(BaseHandler):
             "key": authkey[1],
             "sdt": int(time.time())
         }
-
         if user_extend['COM_ID']:
-            login_result['comId'] = user_extend['COM_ID']
-
-        print login_result
-        self.write(login_result)
+            result['comId'] = user_extend['COM_ID']
+        self.write(json_encode(result))
 
 

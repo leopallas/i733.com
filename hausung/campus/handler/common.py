@@ -6,6 +6,7 @@
 # Copyright 2014 LEO
 from basic import AuthBaseHandler
 from errorcodes import URL_PARAMETERS_NOT_CORRECT
+from tornado.escape import json_encode
 
 
 class BundleCommunityHandler(AuthBaseHandler):
@@ -14,15 +15,17 @@ class BundleCommunityHandler(AuthBaseHandler):
         if not args.get('comId'):
             self.response_status(URL_PARAMETERS_NOT_CORRECT)
             return
-        self.comm_model.bundle_community(args['comId'], self.usr_id)
+        self.comm_model.bundle_community(args['comId'], self.get_usr_id)
 
 
 class GetDistrictsHandler(AuthBaseHandler):
+    def post(self):
+        self.get()
+
     def get(self):
         records = self.comm_model.get_districts()
         community_list = []
         for r in records:
-            community_list.append({'comId': r['COM_ID'], 'comName': r['COM_NAME']})
-
-        result = {'districtName': records[0]['ARE_NAME'], 'communities': community_list}
-        self.write(result)
+            community_list.append({"comId": r['COM_ID'], "comName": r['COM_NAME']})
+        j = json_encode([{"districtName": records[0]['ARE_NAME'], "communities": community_list}])
+        self.write(j)
