@@ -42,9 +42,9 @@ class Application(tornado.web.Application):
             host=options.mysql_host, database=options.mysql_database,
             user=options.mysql_user, password=options.mysql_password)
 
-        self.db_auth = torndb.Connection(
-            host=options.mysql_host, database=options.mysql_database_auth,
-            user=options.mysql_user_auth, password=options.mysql_password_auth)
+        # self.db_auth = torndb.Connection(
+        #     host=options.mysql_host, database=options.mysql_database_auth,
+        #     user=options.mysql_user_auth, password=options.mysql_password_auth)
 
 
 def main():

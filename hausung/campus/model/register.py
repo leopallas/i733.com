@@ -10,32 +10,32 @@ from datetime import datetime
 
 
 class RegisterModel():
-    def __init__(self, db, db_auth):
+    def __init__(self, db):
         self._db = db
-        self._db_auth = db_auth
+        # self._db_auth = db_auth
 
     def get_register_by_phone(self, phone):
-        register = self._db_auth.get('SELECT REG_HP, REG_AUTH_CODE, REG_DT, REG_IND FROM register where REG_HP = %s',
+        register = self._db.get('SELECT REG_HP, REG_AUTH_CODE, REG_DT, REG_IND FROM register where REG_HP = %s',
                                      phone)
         return register
 
     def update_auth_code(self, phone, auth_code):
-        self._db_auth.execute('UPDATE register set REG_AUTH_CODE = %s, REG_DT = %s where REG_HP = %s', auth_code,
+        self._db.execute('UPDATE register set REG_AUTH_CODE = %s, REG_DT = %s where REG_HP = %s', auth_code,
                               datetime.now(), phone)
 
     def insert_register(self, phone, auth_code):
-        self._db_auth.execute('INSERT INTO register(REG_HP, REG_AUTH_CODE, REG_DT, REG_IND) VALUES (%s, %s, %s, %s)',
+        self._db.execute('INSERT INTO register(REG_HP, REG_AUTH_CODE, REG_DT, REG_IND) VALUES (%s, %s, %s, %s)',
                               phone, auth_code, datetime.now(), 1)
 
     def update_register_ind(self, phone):
-        self._db_auth.execute('UPDATE register set REG_IND = 2 where REG_HP = %s', phone)
+        self._db.execute('UPDATE register set REG_IND = 2 where REG_HP = %s', phone)
 
     def insert_user(self, usr_id, phone, pwd, now):
-        self._db_auth.execute('INSERT INTO user(USR_ID, USR_NAME, USR_PWD, USR_TYPE, USR_PHONE, CREATE_DT, UPDATE_DT) '
+        self._db.execute('INSERT INTO user(USR_ID, USR_NAME, USR_PWD, USR_TYPE, USR_PHONE, CREATE_DT, UPDATE_DT) '
                               'VALUES (%s, %s, %s, %s, %s, %s, %s)', usr_id, phone, util.sha1(pwd), 1, phone, now, now)
 
     def get_user(self, username):
-        user = self._db_auth.get('SELECT * FROM user where USR_NAME = %s', username)
+        user = self._db.get('SELECT * FROM user where USR_NAME = %s', username)
         return user
 
     def get_default_img_id(self, type):

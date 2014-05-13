@@ -7,7 +7,6 @@
 import time
 from datetime import datetime, timedelta
 
-from tornado.web import MissingArgumentError
 from tornado.escape import json_encode
 from bson.objectid import ObjectId
 
@@ -20,39 +19,32 @@ from errorcodes import PHONE_ALREADY_REGISTER, PHONE_NOT_PAIR_AUTH_CODE, AUTH_CO
 class GetAuthCodeHandler(BaseHandler):
     def get(self):
         phone = self.get_argument('phone')
-        if not phone:
-            raise MissingArgumentError('phone is missing')
 
-        register = self.register_model.get_register_by_phone(phone)
+        register = self.model_register.get_register_by_phone(phone)
         auth_code = util.gen_auth_code()
         if register is not None:
             if register['REG_IND'] == 2:
                 self.response_status(PHONE_ALREADY_REGISTER)
                 return
             else:
-                self.register_model.update_auth_code(phone, auth_code)
+                self.model_register.update_auth_code(phone, auth_code)
         else:
-            self.register_model.insert_register(phone, auth_code)
+            self.model_register.insert_register(phone, auth_code)
         #TODO... send sms to phone with auth code
 
 
 class RegisterHandler(BaseHandler):
     def post(self):
-        data = self.body_json
-        if not data.get('phone'):
-            raise MissingArgumentError('phone')
-        elif not data.get('authCode'):
-            raise MissingArgumentError('authCode')
-        elif not data.get('pwd'):
-            raise MissingArgumentError('pwd')
+        phone = self.get_json_argument('phone')
+        auth_code = self.get_json_argument('authCode')
+        pwd = self.get_json_argument('pwd')
 
-        phone = data['phone']
-        register = self.register_model.get_register_by_phone(phone)
+        register = self.model_register.get_register_by_phone(phone)
         if register is None:
             self.response_status(PHONE_NOT_PAIR_AUTH_CODE)
             return
         else:
-            if register['REG_AUTH_CODE'] != data['authCode']:
+            if register['REG_AUTH_CODE'] != auth_code:
                 self.response_status(AUTH_CODE_NOT_CORRECT)
                 return
 
@@ -63,49 +55,45 @@ class RegisterHandler(BaseHandler):
                 self.response_status(AUTH_CODE_EXPIRED)
                 return
             # update register, let register indicator change to yes
-            self.register_model.update_register_ind(phone)
+            self.model_register.update_register_ind(phone)
 
             usr_id = ObjectId()
-            self.register_model.insert_user(usr_id, phone, data['pwd'], now)
+            self.model_register.insert_user(usr_id, phone, pwd, now)
 
             # 更新到lifestyle
             nickname = phone.encode("utf-8")
             nickname = nickname[0: 3] + '****' + nickname[7: 11]
-            self.register_model.update_register_user_extend(nickname, usr_id)
+            self.model_register.update_register_user_extend(nickname, usr_id)
 
 
 class LoginHandler(BaseHandler):
     def post(self):
-        data = self.body_json
-        if not data.get('user'):
-            raise MissingArgumentError('user')
-        elif not data.get('pwd'):
-            raise MissingArgumentError('pwd')
-        elif not data.get('sn'):
-            raise MissingArgumentError('sn')
-        elif not data.get('type'):
-            raise MissingArgumentError('type')
+        account = self.get_json_argument('user')
+        pwd = self.get_json_argument('pwd')
+        sn = self.get_json_argument('sn')
+        type = self.get_json_argument('type')
+        # n = self.request.arguments
 
-        user = self.register_model.get_user(data['user'])
+        user = self.model_register.get_user(account)
         if not user:
             # self.send_error(USER_NAME_INVALID)
             self.response_status(USERNAME_EMPTY)
             return
-        if user['USR_PWD'] != util.sha1(data['pwd']):
+        if user['USR_PWD'] != util.sha1(pwd):
             # self.send_error(PASSWORD_ERROR)
             self.response_status(PASSWORD_ERROR)
 
-        if data['type'] == u'Android':
-            device_os = 2
-        elif data['type'] == u'iOS':
-            device_os = 3
+        if type == u'Android':
+            device_type = 2
+        elif type == u'iOS':
+            device_type = 3
 
         usr_id = user['USR_ID']
         # 更换authKey
-        authkey = self.register_model.change_auth_key(usr_id)
+        authkey = self.model_register.change_auth_key(usr_id)
         # 更新登录信息user_extend
-        user_extend = self.register_model.update_login_user_extend(usr_id, data['sn'], device_os)
-        servers = self.register_model.get_servers()
+        user_extend = self.model_register.update_login_user_extend(usr_id, sn, device_type)
+        servers = self.model_register.get_servers()
         for server in servers:
             if server['https'] == 1:
                 server['https'] = True

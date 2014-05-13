@@ -9,126 +9,104 @@ import tornado.ioloop
 from tornado.escape import url_unescape, json_decode
 import tornado.web
 import tornado.httpserver
-from tornado.log import app_log, gen_log
+from tornado.log import access_log
 from tornado.web import MissingArgumentError
-from tornado.web import HTTPError
 
 from hausung.campus import util
 from hausung.campus.model.register import RegisterModel, CommonModel
-
-
-class AuthBaseHandler(tornado.web.RequestHandler):
-    def __init__(self, application, request, **kwargs):
-        super(AuthBaseHandler, self).__init__(application, request, **kwargs)
-        # self.supported_path = ['register', 'get-auth-code']
-        #set response header name and value.
-        self.set_header('Content-Type', 'application/json')
-        self.usr_id = None
-
-    def initialize(self):
-        pass
-
-    def prepare(self):
-        args = self.request.query_arguments
-        if not args.get('tm') or not args.get('nonce') or not args.get('au') or not args.get('tkn'):
-            gen_log.debug('Missing parameter tm or nonce or au or tkn')
-            raise MissingArgumentError('tm or nonce or au or tkn')
-
-        data = {}
-        for a in args:
-            data[a] = self.get_argument(a)
-        #根据SECRET_TOKEN从数据库中取得签名的Key
-        authkey = self.db.get("SELECT SIGNATURE_KEY, USR_ID FROM auth_key where SECRET_TOKEN = %s", data['tkn'])
-        if not authkey:
-            raise HTTPError(400)
-            # self.response_status(400)
-        # 验证签名
-        uri = '%s+%s+%s+%s' % (
-            self.request.method, self.request.protocol, self.request.path, url_unescape(self.request.query))
-        uri = uri.replace('&au=' + data['au'], '')
-        uri = uri.replace('&tkn=' + data['tkn'], '')
-        sign = util.signature(authkey['SIGNATURE_KEY'], uri)
-        if sign != data['au']:
-            raise HTTPError(400)
-        self.usr_id = authkey['USR_ID']
-
-    @property
-    def body_json(self):
-        if self.request.method in self.SUPPORTED_METHODS:
-            content_type = self.request.headers['Content-Type']
-            if content_type == 'application/json':
-                try:
-                    return json_decode(self.request.body)
-                except ValueError, e:
-                    gen_log.error('decode track data error. e=%s' % e)
-                #     error_info = {'my_exc_info': 'decode track data error. e=%s' % e, 'des': '参数有误！',
-                # 'reason': ['参数有误！'], 'next_url': '/'}
-                #     self.send_error(400, **error_info)
-                    raise HTTPError(400)
-            else:
-                gen_log.error('content-type is not application/json.')
-                raise HTTPError(400)
-        else:
-            raise HTTPError(405)
-
-    @property
-    def db(self):
-        return self.application.db
-
-    @property
-    def comm_model(self):
-        return CommonModel(self.application.db)
-
-    @property
-    def get_usr_id(self):
-        return self.usr_id
-
-    def response_status(self, code=(500, 'Server Error!')):
-        print code
-        self.set_status(code[0], code[1])
 
 
 class BaseHandler(tornado.web.RequestHandler):
     def __init__(self, application, request, **kwargs):
         super(BaseHandler, self).__init__(application, request, **kwargs)
         self.set_header('Content-Type', 'application/json')
+        self._auth_request = False
+        self._usr_id = None
+        self._json_arguments = None
 
     @property
     def db(self):
         return self.application.db
 
     @property
-    def db_auth(self):
-        return self.application.db_auth
+    def model_register(self):
+        return RegisterModel(self.application.db)
 
     @property
-    def register_model(self):
-        return RegisterModel(self.application.db, self.application.db_auth)
+    def model_comm(self):
+        return CommonModel(self.application.db)
+
+    @property
+    def get_usr_id(self):
+        return self._usr_id
 
     def initialize(self):
         pass
 
     def prepare(self):
-        # args = self.request.query_arguments
-        # data = {}
-        # for a in args:
-        #     data[a] = self.get_argument(a)
-        # return data
-        pass
+        if self._auth_request:
+            self._usr_id = self.validation_url_sign()
 
-    @property
-    def body_json(self):
-        if self.request.method in ('POST', 'DELETE', 'PATCH', 'PUT', 'OPTIONS'):
-            content_type = self.request.headers['Content-Type']
-            if content_type == 'application/json':
-                try:
-                    return json_decode(self.request.body)
-                except ValueError, e:
-                    gen_log.debug('decode track data error. e=%s' % e)
-                    raise HTTPError(400)
-            else:
-                gen_log.debug('content-type is not application/json.')
-                raise HTTPError(400)
+    def load_json(self):
+        """Load JSON from the request body and store them in
+        self.request.arguments, like Tornado does by default for POSTed form
+        parameters.
+
+        If JSON cannot be decoded, raises an HTTPError with status 400.
+        """
+        if self.request.headers['Content-Type'] == 'application/json':
+            try:
+                self._json_arguments = json_decode(self.request.body)
+            except ValueError:
+                msg = "Could not decode JSON: %s" % self.request.body
+                access_log.error(msg)
+                raise tornado.web.HTTPError(400, msg)
+        else:
+            access_log.error('Content-Type is not application/json.')
+            raise tornado.web.HTTPError(400)
+
+    def get_json_argument(self, name, default=None):
+        """Find and return the argument with key 'name' from JSON request data.
+        Similar to Tornado's get_argument() method.
+        """
+        if default is None:
+            default = self._ARG_DEFAULT
+        if not self._json_arguments:
+            self.load_json()
+        if name not in self._json_arguments:
+            if default is self._ARG_DEFAULT:
+                access_log.debug("Missing argument '%s'" % name)
+                raise tornado.web.MissingArgumentError(name)
+            access_log.debug("Returning default argument %s, as we couldn't find "
+                    "'%s' in %s" % (default, name, self.request.arguments))
+            return default
+        arg = self._json_arguments[name]
+        access_log.debug("Found '%s': %s in JSON arguments" % (name, arg))
+        return arg
+
+    def validation_url_sign(self):
+        # args = self.request.query_arguments
+        # if not args.get('tm') or not args.get('nonce') or not args.get('au') or not args.get('tkn'):
+        #     access_log.error('Missing parameter tm or nonce or au or tkn')
+        #     raise MissingArgumentError('tm or nonce or au or tkn')
+        # tm = self.get_argument('tm')
+        # nonce = self.get_argument('nonce')
+        au = self.get_argument('au')
+        tkn = self.get_argument('tkn')
+
+        #根据SECRET_TOKEN从数据库中取得签名的Key
+        authkey = self.db.get("SELECT SIGNATURE_KEY, USR_ID FROM auth_key where SECRET_TOKEN = %s", tkn)
+        if not authkey:
+            raise tornado.web.HTTPError(400)
+        # 验证签名
+        uri = '%s+%s+%s+%s' % (
+            self.request.method, self.request.protocol, self.request.path, url_unescape(self.request.query))
+        uri = uri.replace('&au=' + au, '')
+        uri = uri.replace('&tkn=' + tkn, '')
+        sign = util.signature(authkey['SIGNATURE_KEY'], uri)
+        if sign != au:
+            raise tornado.web.HTTPError(400)
+        return authkey['USR_ID']
 
     def response_status(self, code=(500, 'Server Error!')):
         status_code = code[0]
@@ -139,23 +117,16 @@ class BaseHandler(tornado.web.RequestHandler):
         try:
             self.write_error(status_code)
         except Exception:
-            app_log.error("Uncaught exception in write_error", exc_info=True)
+            access_log.error("Uncaught exception in write_error", exc_info=True)
         if not self._finished:
             self.finish()
 
-    # def send_error(self, status_code=500, **kwargs):
-    #     if self._headers_written:
-    #         gen_log.error("Cannot send error response after headers written")
-    #         if not self._finished:
-    #             self.finish()
-    #         return
-    #     self.clear()
-    #
-    #     reason = constants.responses.get(status_code, 'Unknown')
-    #     self.set_status(status_code, reason=reason)
-    #     try:
-    #         self.write_error(status_code, **kwargs)
-    #     except Exception:
-    #         app_log.error("Uncaught exception in write_error", exc_info=True)
-    #     if not self._finished:
-    #         self.finish()
+    def response_status(self, code=(500, 'Server Error!')):
+        print code
+        self.set_status(code[0], code[1])
+
+
+class AuthBaseHandler(BaseHandler):
+    def __init__(self, application, request, **kwargs):
+        super(AuthBaseHandler, self).__init__(application, request, **kwargs)
+        self._auth_request = True
