@@ -1,0 +1,29 @@
+# -*- coding: UTF-8 -*-
+<div class="tiaozao">
+    <div class="container">
+        <div class="alert dl-horizontal">
+            <h2><i class="icon-shopping-cart"></i><a href="http://${domain_i}/secondhand/secondhandList">跳蚤市场</a></h2>
+            <dl>
+                <dt>分类：</dt>
+                <dd>
+                    <a href="http://${domain_i}/secondhand/secondhandList">二手手机</a>
+                    <a href="http://${domain_i}/secondhand/secondhandList">二手电脑</a>
+                    <a href="http://${domain_i}/secondhand/secondhandList">二手家具</a>
+                    <a href="http://${domain_i}/secondhand/secondhandList">二手家电</a>
+                    <a href="http://${domain_i}/secondhand/secondhandList">二手设备</a>
+                    <a href="http://${domain_i}/secondhand/secondhandList">其它二手</a>
+                </dd>
+            </dl>
+        </div>
+        <ul class="thumbnails">
+
+            % for secondhand in secondhands:
+            <li>
+                <a href="http://${domain_i}/secondhand/selectSecondhandById?shId=%(SH_ID)s" class="span3"><img src="${secondhand['URL']}" /></a>
+                <a href="http://${domain_i}/secondhand/selectSecondhandById?shId=%(SH_ID)s" title="${secondhand['TITLE']}">${secondhand['TITLE']}</a>
+                <b>￥${secondhand['PRICE']}元</b>
+            </li>
+            % endfor
+        </ul>
+    </div>
+</div>

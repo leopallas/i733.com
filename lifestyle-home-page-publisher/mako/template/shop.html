@@ -1,0 +1,15 @@
+# -*- coding: UTF-8 -*-
+<ul class="thumbnails shangjia">
+    <li class="span5">
+        <a href="http://${domain_i}/shop/shopList">
+            <img src="http://${domain_img}/tps/i2/T1X.N8XtFbXXaCwpjX.png" title="商家名" />
+        </a>
+    </li>
+    % for shop in shops:
+    <li>
+        <a href="http://i.wjia.com.cn/shop/selectShopById?shopId=${shop['SHOP_ID']}">
+            <img src="${shop['URL']}"  title="${shop['SHOP_NAME']}" />
+        </a>
+    </li>
+    % endfor
+</ul>

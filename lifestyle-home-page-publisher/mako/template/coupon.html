@@ -1,0 +1,48 @@
+# -*- coding: UTF-8 -*-
+<div class="youhquan">
+    <div class="alert dl-horizontal">
+        <h2><i class="icon-tag"></i><a href="http://${domian_i}/coupon/couponList">近期优惠券</a></h2>
+        <dl>
+            <dt>分类：</dt>
+            <dd>
+                <a href="http://${domain_i}/coupon/couponList">火锅</a>
+                <a href="http://${domain_i}/coupon/couponList">海鲜</a>
+                <a href="http://${domain_i}/coupon/couponList">快餐</a>
+                <a href="http://${domain_i}/coupon/couponList">西餐</a>
+                <a href="http://${domain_i}/coupon/couponList">自助</a>
+                <a href="http://${domain_i}/coupon/couponList">炒菜</a>
+                <a href="http://${domain_i}/coupon/couponList">其它</a>
+            </dd>
+        </dl>
+        <dl>
+            <dt>人均：</dt>
+            <dd>
+                <a href="http://${domain_i}/coupon/couponList">100元以下</a>
+                <a href="http://${domain_i}/coupon/couponList">100-200元</a>
+                <a href="http://${domain_i}/coupon/couponList">200-300元</a>
+                <a href="http://${domain_i}/coupon/couponList">300-400元</a>
+                <a href="http://${domain_i}/coupon/couponList">400-500元</a>
+                <a href="http://${domain_i}/coupon/couponList">500-600元</a>
+                <a href="http://${domain_i}/coupon/couponList">600-700元</a>
+                <a href="http://${domain_i}/coupon/couponList">700-800元</a>
+                <a href="http://${domain_i}/coupon/couponList">800-900元</a>
+                <a href="http://${domain_i}/coupon/couponList">900元以上</a>
+            </dd>
+        </dl>
+    </div>
+    <ul class="thumbnails">
+        % for coupon in coupons:
+        <li class="span4">
+            <div class="thumbnail">
+                <a href="http://${domain_i}/coupon/selectCouponById?couponId=${coupon['COUPON_ID']}"><img src="${URL}" /></a>
+                <div class="caption">
+                    <h2><a href="http://${domain_i}/coupon/selectCouponById?couponId=${coupon['COUPON_ID']}">${coupon['SHOP_NAME']}</a></h2>
+                    <p>${coupon['TITLE']}&hellip;</p>
+                    <p>有效期：${coupon['EXPIRED_DATE']}</p>
+                    <h4>人均：￥${coupon['AVERAGE_PRICE']}元</h4>
+                </div>
+            </div>
+        </li>
+        % endfor
+    </ul>
+</div>

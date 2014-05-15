@@ -1,0 +1,41 @@
+# -*- coding: UTF-8 -*-
+<div id="fangwu">
+    <div class="container">
+        <div class="alert dl-horizontal">
+            <h2><i class="icon-home"></i><a href="http://fang.wjia.com.cn/rent/rentList">最新房屋信息</a></h2>
+            <dl>
+                <dt>厅室：</dt>
+                <dd>
+                    <a href="http://${domain_fang}/rent/rentList">一室</a>
+                    <a href="http://${domain_fang}/rent/rentList">两室</a>
+                    <a href="http://${domain_fang}/rent/rentList">三室</a>
+                    <a href="http://${domain_fang}/rent/rentList">四室</a>
+                </dd>
+            </dl>
+            <dl>
+                <dt>价格：</dt>
+                <dd>
+                    <a href="http://${domain_fang}/rent/rentList">100元以下</a>
+                    <a href="http://${domain_fang}/rent/rentList">100-200元</a>
+                    <a href="http://${domain_fang}/rent/rentList">200-300元</a>
+                    <a href="http://${domain_fang}/rent/rentList">300-400元</a>
+                    <a href="http://${domain_fang}/rent/rentList">400-500元</a>
+                    <a href="http://${domain_fang}/rent/rentList">500-600元</a>
+                    <a href="http://${domain_fang}/rent/rentList">600-700元</a>
+                    <a href="http://${domain_fang}/rent/rentList">800元以上</a>
+                </dd>
+            </dl>
+        </div>
+
+        % for house in houses:
+        <div class="media">
+            <a href="http://${domain_fang}/rent/selectRentById?rentId=%(RENT_ID)s" class="pull-left"><img src="${house['URL']}"></a>
+            <div class="media-body">
+                <h2><a href="http://${domain_fang}/rent/selectRentById?rentId=%(RENT_ID)s">${house['TITLE']}</a></h2>
+                <b>${house['RENT_PRICE']}</b>元/月
+                <p class="muted">${house['COM_NAME']}</p>
+            </div>
+        </div>
+        % endfor
+    </div>
+</div>
