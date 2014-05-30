@@ -12,7 +12,7 @@ import tornado.httpserver
 from tornado.log import access_log
 from tornado.web import MissingArgumentError
 
-import util
+from campus import util
 from campus.model.register import RegisterModel, CommonModel
 
 
@@ -57,7 +57,13 @@ class BaseHandler(tornado.web.RequestHandler):
 
         If JSON cannot be decoded, raises an HTTPError with status 400.
         """
-        if self.request.headers['Content-Type'] == 'application/json':
+        json_headers = (
+            "text/json",
+            # "text/javascript",
+            "application/json",  # default
+            # "application/javascript",
+        )
+        if self.request.headers['Content-Type'] in json_headers:
             try:
                 self._json_args = json_decode(self.request.body)
             except ValueError:
@@ -88,12 +94,6 @@ class BaseHandler(tornado.web.RequestHandler):
         return arg
 
     def validation_url_sign(self):
-        # args = self.request.query_arguments
-        # if not args.get('tm') or not args.get('nonce') or not args.get('au') or not args.get('tkn'):
-        #     access_log.error('Missing parameter tm or nonce or au or tkn')
-        #     raise MissingArgumentError('tm or nonce or au or tkn')
-        # tm = self.get_argument('tm')
-        # nonce = self.get_argument('nonce')
         au = self.get_argument('au')
         tkn = self.get_argument('tkn')
 

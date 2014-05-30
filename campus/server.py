@@ -12,8 +12,8 @@ import tornado.web
 import tornado.httpserver
 import tornado.log
 from tornado.options import define, options
-
-import url
+from sqlalchemy.orm import scoped_session, sessionmaker
+import urls
 
 
 define("port", default=8889, help="run on the given port", type=int)
@@ -27,12 +27,11 @@ define("mysql_database_auth", default="auth_2.0", help="authentication database 
 define("mysql_user_auth", default="root", help="authentication database user")
 define("mysql_password_auth", default="root", help="authentication database password")
 
-
 class Application(tornado.web.Application):
     def __init__(self):
-        handlers = url
+        handlers = urls
         settings = dict(
-            web_title=u"Tornado Web",
+            web_title=u"Campus Lifestyle",
             debug=True,
         )
         tornado.web.Application.__init__(self, handlers, **settings)
@@ -42,6 +41,7 @@ class Application(tornado.web.Application):
             host=options.mysql_host, database=options.mysql_database,
             user=options.mysql_user, password=options.mysql_password)
 
+        self.db = scoped_session(sessionmaker(bind=engine))
         # self.db_auth = torndb.Connection(
         #     host=options.mysql_host, database=options.mysql_database_auth,
         #     user=options.mysql_user_auth, password=options.mysql_password_auth)

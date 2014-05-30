@@ -11,10 +11,6 @@ from tornado.escape import json_encode
 
 class BundleCommunityHandler(AuthBaseHandler):
     def post(self):
-        # args = self.request.query_arguments
-        # if not args.get('comId'):
-        #     self.response_status(URL_PARAMETERS_NOT_CORRECT)
-        #     return
         com_id = self.get_argument('comId')
         self.model_comm.bundle_community(com_id, self.get_usr_id)
 
