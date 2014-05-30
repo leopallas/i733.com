@@ -1,0 +1,5 @@
+#pycrypto==2.6.1
+#torndb==0.2
+tornado==3.2
+SQLAlchemy==0.9.4
+WTForms==2.0
