@@ -92,7 +92,7 @@ class Option(Base):
     id = Column('id', BIGINT(display_width=20, unsigned=True), primary_key=True, nullable=False)
     name = Column('name', VARCHAR(length=64), nullable=False)
     value = Column('value', LONGTEXT(), nullable=False)
-    autoload = Column('autoload', VARCHAR(length=20), nullable=False)
+    autoload = Column('autoload', VARCHAR(length=20), nullable=False, default=u'yes')
 
     #relation definitions
 
@@ -104,28 +104,28 @@ class Post(Base):
 
     #column definitions
     id = Column('id', BIGINT(display_width=20, unsigned=True), primary_key=True, nullable=False)
-    author = Column('author', BIGINT(display_width=20, unsigned=True), nullable=False)
-    date = Column('date', DATETIME(), nullable=False)
-    date_gmt = Column('date_gmt', DATETIME(), nullable=False)
+    author = Column('author', BIGINT(display_width=20, unsigned=True), nullable=False, default=0)
+    date = Column('date', DATETIME(), nullable=False, default=u"'0000-00-00 00:00:00'")
+    date_gmt = Column('date_gmt', DATETIME(), nullable=False, default=u"'0000-00-00 00:00:00'")
     content = Column('content', LONGTEXT(), nullable=False)
     title = Column('title', TEXT(), nullable=False)
     excerpt = Column('excerpt', TEXT(), nullable=False)
-    status = Column('status', VARCHAR(length=20), nullable=False)
-    comment_status = Column('comment_status', VARCHAR(length=20), nullable=False)
-    ping_status = Column('ping_status', VARCHAR(length=20), nullable=False)
-    password = Column('password', VARCHAR(length=20), nullable=False)
-    name = Column('name', VARCHAR(length=200), nullable=False)
+    status = Column('status', VARCHAR(length=20), nullable=False, default=u'publish')
+    comment_status = Column('comment_status', VARCHAR(length=20), nullable=False, default=u'open')
+    ping_status = Column('ping_status', VARCHAR(length=20), nullable=False, default=u'open')
+    password = Column('password', VARCHAR(length=20), nullable=False, default=u'')
+    name = Column('name', VARCHAR(length=200), nullable=False, default=u'')
     to_ping = Column('to_ping', TEXT(), nullable=False)
     pinged = Column('pinged', TEXT(), nullable=False)
     modified = Column('modified', DATETIME(), nullable=False)
     modified_gmt = Column('modified_gmt', DATETIME(), nullable=False)
     content_filtered = Column('content_filtered', LONGTEXT(), nullable=False)
-    parent = Column('parent', BIGINT(display_width=20, unsigned=True), nullable=False)
-    guid = Column('guid', VARCHAR(length=255), nullable=False)
-    menu_order = Column('menu_order', INTEGER(display_width=11), nullable=False)
-    type = Column('type', VARCHAR(length=20), nullable=False)
-    mime_type = Column('mime_type', VARCHAR(length=100), nullable=False)
-    comment_count = Column('comment_count', BIGINT(display_width=20), nullable=False)
+    parent = Column('parent', BIGINT(display_width=20, unsigned=True), nullable=False, default=0)
+    guid = Column('guid', VARCHAR(length=255), nullable=False, default=u'')
+    menu_order = Column('menu_order', INTEGER(display_width=11), nullable=False, default=0)
+    type = Column('type', VARCHAR(length=20), nullable=False, default=u'post')
+    mime_type = Column('mime_type', VARCHAR(length=100), nullable=False, default=u'')
+    comment_count = Column('comment_count', BIGINT(display_width=20), nullable=False, default=0)
 
     #relation definitions
 
@@ -153,7 +153,7 @@ class Term(Base):
     id = Column('id', BIGINT(display_width=20, unsigned=True), primary_key=True, nullable=False)
     name = Column('name', VARCHAR(length=200), nullable=False)
     slug = Column('slug', VARCHAR(length=200), nullable=False)
-    term_group = Column('term_group', BIGINT(display_width=10), nullable=False)
+    term_group = Column('term_group', BIGINT(display_width=10), nullable=False, default=0)
 
     #relation definitions
 
@@ -195,15 +195,15 @@ class User(Base):
 
     #column definitions
     id = Column('id', BIGINT(display_width=20, unsigned=True), primary_key=True, nullable=False)
-    login = Column('login', VARCHAR(length=60), nullable=False)
-    _password = Column('password', VARCHAR(length=64), nullable=False)
-    nicename = Column('nicename', VARCHAR(length=50), nullable=False)
-    email = Column('email', VARCHAR(length=100), nullable=False)
-    url = Column('url', VARCHAR(length=100), nullable=False)
-    registered = Column('registered', DATETIME(), nullable=False)
-    activation_key = Column('activation_key', VARCHAR(length=60), nullable=False)
-    status = Column('status', INTEGER(display_width=11), nullable=False)
-    display_name = Column('display_name', VARCHAR(length=250), nullable=False)
+    login = Column('login', VARCHAR(length=60), nullable=False, default=u'')
+    _password = Column('password', VARCHAR(length=64), nullable=False, default=u'')
+    nicename = Column('nicename', VARCHAR(length=50), nullable=False, default=u'')
+    email = Column('email', VARCHAR(length=100), nullable=False, default=u'')
+    url = Column('url', VARCHAR(length=100), nullable=False, default=u'')
+    registered = Column('registered', DATETIME(), nullable=False, default=u'0000-00-00 00:00:00')
+    activation_key = Column('activation_key', VARCHAR(length=60), nullable=False, default=u'')
+    status = Column('status', INTEGER(display_width=11), nullable=False, default=u'0')
+    display_name = Column('display_name', VARCHAR(length=250), nullable=False, default=u'')
 
     #relation definitions
 
@@ -266,7 +266,111 @@ def drop_db():
     Base.metadata.drop_all(engine)
 
 
+def init_tables():
+    # delete all tables
+    #drop_db()
+    #create all tables
+    #init_db()
+    from sqlalchemy.orm import scoped_session, sessionmaker
+    from sqlalchemy.engine import reflection
+
+    db = scoped_session(sessionmaker(bind=engine))
+    tables = reflection.Inspector.from_engine(engine).get_table_names()
+
+    default_category = 1
+
+    # determine if it needs to re-create the table.
+    import datetime
+
+    if 'user' not in tables:
+        User.__table__.create(engine)
+        user = User(login='leo',
+                    password='123456',
+                    nicename=u'鸟人',
+                    email='leopallas@gmail.com',
+                    url='www.i733.com',
+                    registered=datetime.datetime.now(),
+                    activation_key='123456',
+                    status=1,
+                    display_name='leo'
+        )
+        db.add(user)
+        db.commit()
+
+    if 'usermeta' not in tables:
+        Usermeta.__table__.create(engine)
+
+    if 'post' not in tables:
+        Post.__table__.create(engine)
+        post = Post(author=1,
+                    date=datetime.datetime.now(),
+                    date_gmt=datetime.datetime.now(),
+                    title=u'我的第一篇文章哦',
+                    content=u'欢迎使用python,tornado开发的博客系统',
+                    excerpt=u'欢迎使用python,tornado开发的博客系统',
+                    modified=datetime.datetime.now(),
+                    modified_gmt=datetime.datetime.now(),
+                    to_ping=u'',
+                    pinged=u'',
+                    content_filtered=u''
+                    )
+        db.add(post)
+        db.commit()
+
+    if 'postmeta' not in tables:
+        Postmeta.__table__.create(engine)
+
+    if 'comment' not in tables:
+        Comment.__table__.create(engine)
+
+    if 'commentmeta' not in tables:
+        Commentmeta.__table__.create(engine)
+
+    if 'link' not in tables:
+        Link.__table__.create(engine)
+
+    if 'term' not in tables:
+        Term.__table__.create(engine)
+        term = Term(name=u'未分类',
+                    slug='uncategoried',
+                    )
+        db.add(term)
+        db.commit()
+        default_category = term.id
+
+    if 'term_relationship' not in tables:
+        TermRelationship.__table__.create(engine)
+
+    if 'term_taxonomy' not in tables:
+        TermTaxonomy.__table__.create(engine)
+
+    if 'option' not in tables:
+        Option.__table__.create(engine)
+    db.add_all([Option(name='blogname', value='Leo Blog'),
+                Option(name='blogdescription', value=u'欢迎使用鸟人的博客系统'),
+                Option(name='users_can_register', value='0'),
+                Option(name='admin_email', value='test@example.com'),
+                Option(name='comments_notify', value='0'),
+                Option(name='posts_per_rss', value='10'),
+                Option(name='rss_use_excerpt', value='0'),
+                # 缺省的文章是未分类
+                Option(name='default_category', value=default_category),
+                # 是否允许评论
+                Option(name='users_can_comment', value='1'),
+                # 每页最多显示多少条文章
+                Option(name='posts_per_page', value='10'),
+                Option(name='posts_per_recent_post', value='10'),
+                Option(name='posts_per_recent_comment', value='10'),
+                Option(name='mailserver_url', value='mail.example.com'),
+                Option(name='mailserver_login', value='login@example.com'),
+                Option(name='mailserver_pass', value='password'),
+                Option(name='mailserver_port', value='110')])
+    db.commit()
+
+    if 'stat_trace' not in tables:
+        StatTrace.__table__.create(engine)
+
+
 if __name__ == '__main__':
-    # drop_db()
-    # init_db()
+    init_tables()
     pass

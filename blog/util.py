@@ -90,7 +90,7 @@ def signature(key, text):
 
 
 # --------------------------------------------- 日期相关方法 --------------------------------------------
-from datetime import datetime
+import datetime
 import time
 
 
@@ -140,7 +140,7 @@ def compare_dateTime(dateStr1, dateStr2):
     return date1.date() > date2.date()
 
 
-def dateTime_Add(dateStr, days=0, hours=0, minutes=0):
+def dateTime_add(dateStr, days=0, hours=0, minutes=0):
     """ 指定日期加上 一个时间段，天，小时，或分钟之后的日期 """
     date1 = string_toDatetime(dateStr)
     return date1 + datetime.timedelta(days=days, hours=hours, minutes=minutes)
@@ -149,11 +149,24 @@ def dateTime_Add(dateStr, days=0, hours=0, minutes=0):
 def increment_month(when):
     """ 根据当前日期，对年月进行加减的方法 """
     import calendar
+
     days = calendar.monthrange(when.year, when.month)[1]
     return when + datetime.timedelta(days=days)
 
 
+def get_datetime_from_date_now(datenow, now=datetime.datetime.now()):
+    """通过date对象和time对象构造出一个新的datetime"""
+    return datetime.datetime.combine(datenow, datetime.time(now.hour, now.minute, now.second))
+
+
 def main():
+    print get_datetime_from_date_now('2014-03-04')
+
+    import base64
+    import uuid
+
+    print base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
+
     print substract_DateTime('2012-12-12', '2012-01-01')
     #-346 days, 0:00:00
     print substract_DateTime('2012-12-12', '2012-01-01').days
@@ -164,7 +177,7 @@ def main():
     #346.0 天
     print compare_dateTime('2012-12-12', '2012-01-01')
     #True
-    print dateTime_Add('2012-12-12', days=10, hours=5, minutes=10)
+    print dateTime_add('2012-12-12', days=10, hours=5, minutes=10)
     #2012-12-22 05:10:00
 
     now = datetime.datetime.now()

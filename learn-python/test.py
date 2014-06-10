@@ -221,46 +221,46 @@
 #         print(" myfunc2() called.")
 #         return a + b
 
-class route2app(object):
-    _routes = []
-
-    def __init__(self, uri, name=None):
-        self._uri = uri
-        self.name = name
-
-    def __call__(self, _handler):
-        """gets called when we class decorate"""
-        name = self.name or _handler.__name__
-        if not self._uri:
-            pattern = r'(?P<relpath>/.*)?'
-        else:
-            pattern = self._uri + r'(?P<relpath>/.*)?'
-        self._routes.append(_handler.__name__)
-        return _handler
-
-    @classmethod
-    def get_routes(klass):
-        return klass._routes
-
-from datetime import datetime
-
-@route2app(r'/users')
-class BaseHandler(object):
-    def __init__(self, *args, **kwargs):
-        self.t1 = datetime.datetime.now()
-        self.t2 = None
-
-    def on_finish(self):
-        self.t2 = datetime.datetime.now()
-
-@route2app(r'/apps')
-class ABaseHandler(object):
-    def __init__(self, *args, **kwargs):
-        self.t1 = datetime.datetime.now()
-        self.t2 = None
-
-    def on_finish(self):
-        self.t2 = datetime.datetime.now()
+# class route2app(object):
+#     _routes = []
+#
+#     def __init__(self, uri, name=None):
+#         self._uri = uri
+#         self.name = name
+#
+#     def __call__(self, _handler):
+#         """gets called when we class decorate"""
+#         name = self.name or _handler.__name__
+#         if not self._uri:
+#             pattern = r'(?P<relpath>/.*)?'
+#         else:
+#             pattern = self._uri + r'(?P<relpath>/.*)?'
+#         self._routes.append(_handler.__name__)
+#         return _handler
+#
+#     @classmethod
+#     def get_routes(klass):
+#         return klass._routes
+#
+# from datetime import datetime
+#
+# @route2app(r'/users')
+# class BaseHandler(object):
+#     def __init__(self, *args, **kwargs):
+#         self.t1 = datetime.datetime.now()
+#         self.t2 = None
+#
+#     def on_finish(self):
+#         self.t2 = datetime.datetime.now()
+#
+# @route2app(r'/apps')
+# class ABaseHandler(object):
+#     def __init__(self, *args, **kwargs):
+#         self.t1 = datetime.datetime.now()
+#         self.t2 = None
+#
+#     def on_finish(self):
+#         self.t2 = datetime.datetime.now()
 
 # if __name__=="__main__":
     # print route2app.get_routes()
@@ -275,3 +275,17 @@ class ABaseHandler(object):
 #         self['name'] = filename
 
 
+from functools import wraps
+
+
+def deco(f):
+    @wraps(f)
+    def hello(*args, **kwargs):
+        print(f.__name__) # print `test`
+    return hello
+
+@deco
+def test():
+    return 1 + 1
+
+print(test.__name__) # print `hello`

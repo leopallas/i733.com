@@ -34,7 +34,7 @@ ROOT_PATH = os.path.dirname(PROJECT_PATH)
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
-STATIC_URL = '/static/'
+STATIC_URL = '/static'
 
 # 使用SAE Storage服务保存上传的附件，需在SAE管理面板创建
 STORAGE_DOMAIN_NAME = 'upload'
@@ -57,6 +57,6 @@ BLOG_TITLE = u"Leo's Blog"
 # Example: "/var/www/example.com/static/"
 STATIC_PATH = os.path.join(CURRENT_PATH, 'static')
 TEMPLATE_PATH = os.path.join(CURRENT_PATH, 'templates')
-COOKIE_SECRET = "88oETzKXQAGaYdkL6gEmGeJJFYYh7EQnp3XdTP1o/Vo="
+COOKIE_SECRET = "QAl4mJeGTKqAgjheFOqqS/6fVMPHwk/Qsmzg+Zeaqg4="
 XSRF_COOKIES = True
 LOGIN_URL = "/admin/login"

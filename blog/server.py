@@ -12,19 +12,37 @@ import tornado.httpserver
 import tornado.log
 from tornado.options import define, options
 from sqlalchemy.orm import scoped_session, sessionmaker
-import urls
 from blog.model.models import engine
-from setting import DEBUG, LISTEN_PORT, STATIC_PATH, TEMPLATE_PATH, COOKIE_SECRET, LOGIN_URL, XSRF_COOKIES, BLOG_TITLE
+from setting import DEBUG, LISTEN_PORT, STATIC_PATH, TEMPLATE_PATH, COOKIE_SECRET, LOGIN_URL, XSRF_COOKIES, BLOG_TITLE, STATIC_URL
+
+from handler.admin import AdminHomeHandler, AdminLoginHandler, AdminLogoutHandler, AdminProfileHandler, \
+    AdminSettingHandler, AdminPostAddHandler
+from handler.filemanager import FileListHandler, DirListHandler, GetInfoHandler
 
 define("port", default=LISTEN_PORT, help="run on the given port", type=int)
 
+urls = [
+    (r"/admin/login", AdminLoginHandler),
+    (r"/admin/logout", AdminLogoutHandler),
+    (r"/admin/home", AdminHomeHandler),
+    (r"/admin/profile", AdminProfileHandler),
+    (r"/admin/setting", AdminSettingHandler),
+    (r"/admin/post/add", AdminPostAddHandler),
+
+    (r"/filemanager", FileListHandler),
+    (r"/filemanager/dirlist/?", DirListHandler),
+    (r"/filemanager/?", GetInfoHandler),
+
+]
+
 settings = dict(
     blog_title=BLOG_TITLE,
-    template_path=TEMPLATE_PATH,
     static_path=STATIC_PATH,
+    template_path=TEMPLATE_PATH,
     #ui_modules={"Entry": EntryModule},
-    xsrf_cookies=XSRF_COOKIES,
     cookie_secret=COOKIE_SECRET,
+    xsrf_cookies=XSRF_COOKIES,
+    gzip=True,
     login_url=LOGIN_URL,
     debug=DEBUG,
 )
@@ -32,8 +50,7 @@ settings = dict(
 
 class Application(tornado.web.Application):
     def __init__(self):
-        handlers = urls
-        tornado.web.Application.__init__(self, handlers, **settings)
+        tornado.web.Application.__init__(self, urls, **settings)
         # Have one global connection to the blog DB across all handlers
         self.db = scoped_session(sessionmaker(bind=engine))
 

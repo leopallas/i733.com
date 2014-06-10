@@ -4,6 +4,7 @@
 # Version:  1.0
 # Create:   2014-04-10 16:03
 # Copyright 2014 LEO
+import functools
 
 import tornado.ioloop
 from tornado.escape import url_unescape, json_decode
@@ -222,11 +223,37 @@ def get_post_stat_info(db, url):
     #stat['thistodaypageviews'] = db.query(func.count(StatTrace.ip)).filter_by(spider='', feed='', urlrequested=url, date=datetime.date.today()).scalar()
     return stat
 
+###########################################       Decorate     ###########################################
+def responseJson(method):
+    """Decorate methods with this to require that the response header is to be application/json.
+    """
+    @functools.wraps(method)
+    def wrapper(self, *args, **kwargs):
+        self.set_header('Content-Type', 'application/json')
+        # if not self.current_user:
+        #     if self.request.method in ("GET", "HEAD"):
+        #         url = self.get_login_url()
+        #         if "?" not in url:
+        #             if urlparse.urlsplit(url).scheme:
+        #                 # if login url is absolute, make next absolute too
+        #                 next_url = self.request.full_url()
+        #             else:
+        #                 next_url = self.request.uri
+        #             url += "?" + urlencode(dict(next=next_url))
+        #         self.redirect(url)
+        #         return
+        #     raise HTTPError(403)
+        return method(self, *args, **kwargs)
+    return wrapper
+
+
+SECURE_COOKIE = 'leo.blog.i733.com'
+
 
 class BaseHandler(tornado.web.RequestHandler):
     def __init__(self, application, request, **kwargs):
         super(BaseHandler, self).__init__(application, request, **kwargs)
-        self.set_header('Content-Type', 'application/json')
+        # self.set_header('Content-Type', 'application/json')
         self._auth_request = False
         self._usr_id = None
         self._json_args = None
@@ -247,15 +274,24 @@ class BaseHandler(tornado.web.RequestHandler):
         self.db.close()
 
     def prepare(self):
+        # self.set_cookie('.i733.com', '1', httponly=True, secure=True)
+        # self.set_secure_cookie('.i733.com', '2', httponly=True, secure=True)
         self.request_stat_trace()
         if self._auth_request:
             self._usr_id = self.validation_url_sign()
 
     def get_current_user(self):
-        username = self.get_secure_cookie("blogadmin_user")
+        username = self.get_secure_cookie(SECURE_COOKIE)
         if not username:
             return None
         return self.db.query(User).filter_by(login=username).first()
+
+    def get_user_locale(self):
+        # if "locale" not in self.current_user.prefs:
+        #     # Use the Accept-Language header
+        #     return None
+        # return self.current_user.prefs["locale"]
+        return None
 
     @property
     def options(self):
