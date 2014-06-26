@@ -11,7 +11,7 @@ import datetime
 from tornado.web import authenticated
 from blog.handler.basic import BaseHandler, responseJson, SECURE_COOKIE
 
-from blog.model.models import User, Post, Term, TermRelationship, Option
+from blog.model.models import User, Post, Term, TermRelationship, Option, TermTaxonomy
 from blog.form.forms import AdminLoginForm, PageAddForm, TermAddForm, PostAddForm, UserEditForm
 from blog.util import get_datetime_from_date_now
 
@@ -20,7 +20,7 @@ class AdminLoginHandler(BaseHandler):
     def get(self):
         if not self.current_user:
             form = AdminLoginForm(self)
-            self.render("admin/login.html", loginform=form)
+            self.render("admin/login.html", form=form)
         else:
             return self.redirect('/admin/home')
 
@@ -35,7 +35,7 @@ class AdminLoginHandler(BaseHandler):
                 return self.redirect('/admin/home')
             else:
                 form.password.errors.append('Username or Password is wrong')
-        return self.render("admin/login.html", loginform=form)
+        return self.render("admin/login.html", form=form)
 
 
 class AdminLogoutHandler(BaseHandler):
@@ -130,7 +130,7 @@ class AdminSettingHandler(BaseHandler):
         return self.render('admin/setting.html', setting=self.options, success=self.options)
 
         # class AmdinPageListHandler(BaseHandler):
-        #     @authenticated
+        # @authenticated
         #     def get(self):
         #         form = PageAddForm(self)
         #         pages = self.db.query(Post).filter_by(type='page').all()
@@ -199,15 +199,17 @@ class AdminSettingHandler(BaseHandler):
         #             return self.redirect('/admin/page/list')
         #         return self.render("admin/page_edit.html",form=form, current=current)
         #
-        # class AmdinPostListHandler(BaseHandler):
-        #     @authenticated
-        #     def get(self):
-        #         posts = self.db.query(Post).filter_by(status='enabled', type='post').order_by(Post.date.desc()).all()
-        #         return self.render('admin/post.html', posts=posts)
-        #     @authenticated
-        #     def post(self):
-        #         pass
-        #
+
+
+class AdminPostListHandler(BaseHandler):
+    @authenticated
+    def get(self):
+        posts = self.db.query(Post).filter_by(status='publish', type='post').order_by(Post.date.desc()).all()
+        return self.render('admin/post_list.html', posts=posts)
+
+    @authenticated
+    def post(self):
+        pass
 
 
 class AdminPostAddHandler(BaseHandler):
@@ -264,7 +266,7 @@ class AdminPostAddHandler(BaseHandler):
             termname = term.strip()
             termslug = termname.lower()
             # check if this tag exists.
-            tmpc = self.db.query(Term).filter(Term.slug == termslug).filter(Term.taxonomy == 'post_tag').first();
+            tmpc = self.db.query(Term).filter(Term.slug == termslug).filter(Term.term_taxonomy_id == 'post_tag').first()
             if tmpc == None:
                 # new a tag
                 tag = Term(name=termname, slug=termslug, parent=0, taxonomy='post_tag', count=0)
@@ -274,7 +276,7 @@ class AdminPostAddHandler(BaseHandler):
             else:
                 termid = tmpc.id
             # bind tag with post
-            tr = Term_Relationship(post_id=post_id, term_id=termid, term_order=0)
+            tr = TermRelationship(post_id=post_id, term_id=termid, term_order=0)
             self.db.add(tr)
             tag = self.db.query(Term).get(termid)
             tag.count = tag.count + 1
@@ -288,14 +290,14 @@ class AdminPostAddHandler(BaseHandler):
                 pass
         for c in categorys:
             # bind tag with post
-            tr = Term_Relationship(post_id=post_id, term_id=int(c), term_order=0)
+            tr = TermRelationship(post_id=post_id, term_id=int(c), term_order=0)
             self.db.add(tr)
             category = self.db.query(Term).get(int(c))
             category.count = category.count + 1
             self.db.commit()
             #
             # class AmdinPostDeleteHandler(BaseHandler):
-            #     @authenticated
+            # @authenticated
             #     def get(self, pid):
             #         self.db.delete(self.db.query(Post).get(pid))
             #         terms = self.db.query(Term).join(Term_Relationship,Term.id==Term_Relationship.term_id).filter(Term_Relationship.post_id==pid).all()
@@ -413,96 +415,137 @@ class AdminPostAddHandler(BaseHandler):
             #                 self.db.add(tr)
             #                 category.count = category.count+1
             #             self.db.commit()
-            #
-            # class AmdinCategoryListHandler(BaseHandler):
-            #     @authenticated
-            #     def get(self):
-            #         form = TermAddForm(self)
-            #         form.parent.query = self.db.query(Term).filter_by(taxonomy='category',parent=0).order_by(Term.name)
-            #         categorys = self.db.query(Term).filter_by(taxonomy='category').order_by(Term.name).all()
-            #         return self.render('admin/category.html', form=form, categorys=categorys)
-            #     @authenticated
-            #     def post(self):
-            #         pass
-            #
-            # class AmdinCategoryAddHandler(BaseHandler):
-            #     @authenticated
-            #     def get(self):
-            #         pass
-            #     @authenticated
-            #     def post(self):
-            #         form = TermAddForm(self)
-            #         form.parent.query = self.db.query(Term).filter_by(taxonomy='category',parent=0).order_by(Term.name)
-            #         if form.validate():
-            #             name = form.name.data
-            #             desc = form.description.data
-            #             parent = form.parent.data.id if form.parent.data else 0
-            #             page = Term(name=name.strip(), slug=name.strip().lower(),description=desc, parent=parent, taxonomy='category', count=0)
-            #             self.db.add(page)
-            #             self.db.commit()
-            #             return self.redirect('/admin/category/list')
-            #         categorys = self.db.query(Term).filter_by(taxonomy='category').order_by(Term.name).all()
-            #         return self.render("admin/category.html", form=form, categorys=categorys)
-            #
-            # class AmdinCategoryQuickAddHandler(BaseHandler):
-            #     @authenticated
-            #     def get(self):
-            #         pass
-            #     @authenticated
-            #     def post(self):
-            #         name = self.request.arguments['name'][0]
-            #         parents=self.request.arguments['parent'][0].split(",")
-            #         if len(name)>0 and len(parents) == 1:
-            #             tmpc = self.db.query(Term).filter(Term.slug == name.strip().lower()).filter(Term.taxonomy=='category').all();
-            #             if len(tmpc) != 0:
-            #                 self.write("error")
-            #                 return None;
-            #             parent = int(parents[0])
-            #             is_allow_insert = False
-            #             if parent == 0:
-            #                 is_allow_insert = True
-            #             else:
-            #                 parent_term = self.db.query(Term).get(parent)
-            #                 # check if it already exist. and its parent is fist stage
-            #                 if parent_term and parent_term.parent == 0:
-            #                     is_allow_insert = True
-            #             if is_allow_insert:
-            #                 category = Term(name=name, slug=name.strip().lower(), parent=int(parent), taxonomy='category', count=0)
-            #                 self.db.add(category)
-            #                 self.db.commit()
-            #         else:
-            #             self.write("Name is null, Or it only have one parent category!")
-            #
-            # class AmdinCategoryDeleteHandler(BaseHandler):
-            #     @authenticated
-            #     def get(self, cid):
-            #         self.db.query(Term_Relationship).filter_by(term_id=cid).delete()
-            #         self.db.delete(self.db.query(Term).get(cid))
-            #         return self.redirect('/admin/category/list')
-            #     @authenticated
-            #     def post(self, cid):
-            #         pass
-            #
-            # class AmdinCategoryEditHandler(BaseHandler):
-            #     @authenticated
-            #     def get(self, cid):
-            #         form = TermAddForm(self)
-            #         current = self.db.query(Term).get(cid)
-            #         form.parent.query = self.db.query(Term).filter(Term.taxonomy=='category').filter(Term.parent==0).filter(Term.id!=current.id).order_by(Term.name)
-            #         form.name.process_data(current.name)
-            #         form.description.process_data(current.description)
-            #         form.parent.process_data(current.parent)
-            #         return self.render('admin/category_edit.html', form=form, current=current)
-            #     @authenticated
-            #     def post(self, cid):
-            #         form = TermAddForm(self)
-            #         current = self.db.query(Term).get(cid)
-            #         form.parent.query = self.db.query(Term).filter(Term.taxonomy=='category').filter(Term.parent==0).filter(Term.id!=current.id).order_by(Term.name)
-            #         if form.validate():
-            #             current.name = form.name.data.strip()
-            #             current.slug = current.name.strip().lower()
-            #             current.description = form.description.data
-            #             current.parent = form.parent.data.id if form.parent.data else 0
-            #             self.db.commit()
-            #             return self.redirect('/admin/category/list')
-            #         return self.render("admin/category_edit.html",form=form, current=current)
+
+
+import json
+import datetime
+from sqlalchemy.ext.declarative import DeclarativeMeta
+
+
+class AlchemyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj.__class__, DeclarativeMeta):
+            # an SQLAlchemy class
+            fields = {}
+            for field in [x for x in dir(obj) if not x.startswith('_') and x != 'metadata']:
+                data = obj.__getattribute__(field)
+                try:
+                    if type(data) is datetime.datetime:
+                        data = data.strftime("%Y-%m-%d %H:%M:%S")
+                    json.dumps(data)  # this will fail on non-encodable values, like other classes
+                    fields[field] = data
+                except TypeError:
+                    fields[field] = None
+            # a json-encodable dict
+            return fields
+
+        return json.JSONEncoder.default(self, obj)
+
+
+class CategoryListHandler(BaseHandler):
+    def get(self):
+        pass
+
+    @responseJson
+    def post(self):
+        categories = self.db.query(TermTaxonomy).filter_by(taxonomy='category').order_by(TermTaxonomy.term_id).all()
+        terms = self.db.query(Term).filter(Term.id.in_([cate.term_id for cate in categories])).all()
+        # from tornado.escape import json_encode
+        # ss = json_encode([term.as_dict() for term in terms])
+        clist = json.dumps(terms, cls=AlchemyEncoder).replace("</", "<\\/")
+        self.write(clist)
+
+
+class AdminCategoryListHandler(BaseHandler):
+    @authenticated
+    def get(self):
+        form = TermAddForm(self)
+        form.parent.query = self.db.query(Term).filter_by(taxonomy='category', parent=0).order_by(Term.name)
+        categories = self.db.query(Term).filter_by(taxonomy='category').order_by(Term.name).all()
+        return self.render('admin/category.html', form=form, categorys=categories)
+
+    @authenticated
+    def post(self):
+        pass
+        #
+        # class AmdinCategoryAddHandler(BaseHandler):
+        # @authenticated
+        #     def get(self):
+        #         pass
+        #     @authenticated
+        #     def post(self):
+        #         form = TermAddForm(self)
+        #         form.parent.query = self.db.query(Term).filter_by(taxonomy='category',parent=0).order_by(Term.name)
+        #         if form.validate():
+        #             name = form.name.data
+        #             desc = form.description.data
+        #             parent = form.parent.data.id if form.parent.data else 0
+        #             page = Term(name=name.strip(), slug=name.strip().lower(),description=desc, parent=parent, taxonomy='category', count=0)
+        #             self.db.add(page)
+        #             self.db.commit()
+        #             return self.redirect('/admin/category/list')
+        #         categorys = self.db.query(Term).filter_by(taxonomy='category').order_by(Term.name).all()
+        #         return self.render("admin/category.html", form=form, categorys=categorys)
+        #
+        # class AmdinCategoryQuickAddHandler(BaseHandler):
+        #     @authenticated
+        #     def get(self):
+        #         pass
+        #     @authenticated
+        #     def post(self):
+        #         name = self.request.arguments['name'][0]
+        #         parents=self.request.arguments['parent'][0].split(",")
+        #         if len(name)>0 and len(parents) == 1:
+        #             tmpc = self.db.query(Term).filter(Term.slug == name.strip().lower()).filter(Term.taxonomy=='category').all();
+        #             if len(tmpc) != 0:
+        #                 self.write("error")
+        #                 return None;
+        #             parent = int(parents[0])
+        #             is_allow_insert = False
+        #             if parent == 0:
+        #                 is_allow_insert = True
+        #             else:
+        #                 parent_term = self.db.query(Term).get(parent)
+        #                 # check if it already exist. and its parent is fist stage
+        #                 if parent_term and parent_term.parent == 0:
+        #                     is_allow_insert = True
+        #             if is_allow_insert:
+        #                 category = Term(name=name, slug=name.strip().lower(), parent=int(parent), taxonomy='category', count=0)
+        #                 self.db.add(category)
+        #                 self.db.commit()
+        #         else:
+        #             self.write("Name is null, Or it only have one parent category!")
+        #
+        # class AmdinCategoryDeleteHandler(BaseHandler):
+        #     @authenticated
+        #     def get(self, cid):
+        #         self.db.query(Term_Relationship).filter_by(term_id=cid).delete()
+        #         self.db.delete(self.db.query(Term).get(cid))
+        #         return self.redirect('/admin/category/list')
+        #     @authenticated
+        #     def post(self, cid):
+        #         pass
+        #
+        # class AmdinCategoryEditHandler(BaseHandler):
+        #     @authenticated
+        #     def get(self, cid):
+        #         form = TermAddForm(self)
+        #         current = self.db.query(Term).get(cid)
+        #         form.parent.query = self.db.query(Term).filter(Term.taxonomy=='category').filter(Term.parent==0).filter(Term.id!=current.id).order_by(Term.name)
+        #         form.name.process_data(current.name)
+        #         form.description.process_data(current.description)
+        #         form.parent.process_data(current.parent)
+        #         return self.render('admin/category_edit.html', form=form, current=current)
+        #     @authenticated
+        #     def post(self, cid):
+        #         form = TermAddForm(self)
+        #         current = self.db.query(Term).get(cid)
+        #         form.parent.query = self.db.query(Term).filter(Term.taxonomy=='category').filter(Term.parent==0).filter(Term.id!=current.id).order_by(Term.name)
+        #         if form.validate():
+        #             current.name = form.name.data.strip()
+        #             current.slug = current.name.strip().lower()
+        #             current.description = form.description.data
+        #             current.parent = form.parent.data.id if form.parent.data else 0
+        #             self.db.commit()
+        #             return self.redirect('/admin/category/list')
+        #         return self.render("admin/category_edit.html",form=form, current=current)

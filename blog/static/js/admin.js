@@ -3,60 +3,58 @@ function getCookie(name) {
     return r ? r[1] : undefined;
 }
 
-function updateCategoryList(after_success_func){
-    $.post("/category/list",
-            {_xsrf:getCookie("_xsrf")},
-            function(data, textStatus, jqXHR){
-                categorys = JSON.parse(data)
-                $("#categorylist").children().remove()
-                clist = $("#categorylist")
-                newelement = "";
-                for(i = 0; i<categorys.length; i++){
-                    c= categorys[i];
-                    if(c['parent'] == 0){
-                        newelement += "<li><label class='checkbox'><input value='"+c['id']+"' type='checkbox' name='post_category[]' id='post_category_"+c['id']+"'/>"+c['name']+"</label>";
+function updateCategoryList(after_success_func) {
+    $.post(
+        "/category/list",
+        {_xsrf: getCookie("_xsrf")},
+        function (data) {
+            var categories = data
+            $("#categorylist").children().remove()
+            var innerHtml = "";
+            for (var i = 0; i < categories.length; i++) {
+                innerHtml += "<li><label class='checkbox text-justify'><input value='" + categories[i].id + "' type='checkbox' name='post_category[]' id='post_category_" + categories[i].id + "'/>" + categories[i].name + "</label></li>";
 
-                        newelement += "<ul class='nav nav-list'>";
-                        for(j = 0; j<categorys.length; j++){
-                            sc = categorys[j]
-                            if(sc['parent'] == c['id'])
-                            {
-                                newelement += "<li><label class='checkbox'><input value='"+sc['id']+"' type='checkbox' name='post_category[]' id='post_category_"+sc['id']+"'/>"+sc['name']+"</label></li>";
-                            }
-                        }
-                        newelement += "</ul></li>";
-                    }
-                }
-                clist.append(newelement);
-                if(after_success_func)
-                    after_success_func();
+//                if (categories[i].parent == 0) {
+//                    innerHtml += "<li><label class='checkbox'><input value='" + categories[i].id + "' type='checkbox' name='post_category[]' id='post_category_" + categories[i].id + "'/>" + categories[i].name + "</label>";
+//
+//                    innerHtml += "<ul class='nav list-group'>";
+//                    for (j = 0; j < categories.length; j++) {
+//                        if (categories[j].parent == categories[i].id) {
+//                            innerHtml += "<li><label class='checkbox'><input value='" + categories[j].id + "' type='checkbox' name='post_category[]' id='post_category_" + categories[j].id + "'/>" + categories[j].name + "</label></li>";
+//                        }
+//                    }
+//                    innerHtml += "</ul></li>";
+//                }
             }
+            $("#categorylist").append(innerHtml);
+            if (after_success_func)
+                after_success_func();
+        }
     );
 }
-$(function(){
-    $("#category_quickadd").click(function() {
+$(function () {
+    $("#category_quick_add").click(function () {
         var name = $("#new_category").val();
-        if(name == ""){
+        if (name == "") {
             alert("please input the category name!");
             return;
         }
         _xsrf__ = getCookie("_xsrf");
         var selectedItems = new Array();
-        $("input[name='post_category[]']:checked").each(function() {selectedItems.push($(this).val());});
-        if (selectedItems .length == 0)
+        $("input[name='post_category[]']:checked").each(function () {
+            selectedItems.push($(this).val());
+        });
+        if (selectedItems.length == 0)
             selectedItems.push(0);
         $.post("/admin/category/quickadd",
-            {_xsrf:_xsrf__,
-             name:$("#new_category").val(),
-             parent:selectedItems.join(",")},
-            function(data, textStatus, jqXHR){
-                updateCategoryList(function()
-                {
+            {_xsrf: _xsrf__,
+                name: $("#new_category").val(),
+                parent: selectedItems.join(",")},
+            function (data, textStatus, jqXHR) {
+                updateCategoryList(function () {
                     //new_category_name = $("#new_category").val();
                     $("#new_category").val('')
                 });
             });
     });
 })
-
-

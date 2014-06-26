@@ -16,7 +16,7 @@ from blog.model.models import engine
 from setting import DEBUG, LISTEN_PORT, STATIC_PATH, TEMPLATE_PATH, COOKIE_SECRET, LOGIN_URL, XSRF_COOKIES, BLOG_TITLE, STATIC_URL
 
 from handler.admin import AdminHomeHandler, AdminLoginHandler, AdminLogoutHandler, AdminProfileHandler, \
-    AdminSettingHandler, AdminPostAddHandler
+    AdminSettingHandler, AdminPostListHandler, AdminPostAddHandler, CategoryListHandler
 from handler.filemanager import FileListHandler, DirListHandler, GetInfoHandler
 
 define("port", default=LISTEN_PORT, help="run on the given port", type=int)
@@ -27,11 +27,12 @@ urls = [
     (r"/admin/home", AdminHomeHandler),
     (r"/admin/profile", AdminProfileHandler),
     (r"/admin/setting", AdminSettingHandler),
+    (r"/admin/post/list", AdminPostListHandler),
     (r"/admin/post/add", AdminPostAddHandler),
-
     (r"/filemanager", FileListHandler),
     (r"/filemanager/dirlist/?", DirListHandler),
     (r"/filemanager/?", GetInfoHandler),
+    (r"/category/list", CategoryListHandler),
 
 ]
 

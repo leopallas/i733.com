@@ -5,18 +5,16 @@
 {% end %}
 
 {% block content-nav %}
-<ul class="breadcrumb">
-    <li>
-        <a href="/admin/home">Home</a> <span class="divider">/</span>
-    </li>
-    <li>
-        <a href="/admin/post/add">Publish</a>
-    </li>
-    <li class="pull-right">
-        <i class="icon-arrow-left"></i>
-        <a href="/admin/page/list">Return to page list</a>
-    </li>
-</ul>
+<div class="row">
+    <ul class="breadcrumb">
+        <li><a href="/admin/home">Dashboard</a></li>
+        <li><a href="/admin/post/list">Post List</a></li>
+        <li class="pull-right">
+            <i class="glyphicon glyphicon-arrow-left"></i>
+            <a href="/admin/home"><span class="hidden-sm">&nbsp;Return to Home </span></a>
+        </li>
+    </ul>
+</div>
 {% end %}
 
 {% block content-header %}

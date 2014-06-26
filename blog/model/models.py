@@ -156,6 +156,8 @@ class Term(Base):
     term_group = Column('term_group', BIGINT(display_width=10), nullable=False, default=0)
 
     #relation definitions
+    # def as_dict(self):
+    #     return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
 
 class TermRelationship(Base):

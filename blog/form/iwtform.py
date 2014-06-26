@@ -44,18 +44,19 @@ class Form(Form):
     """
     `WTForms` wrapper for Tornado.
     """
-    def __init__(self, formdata=None, obj=None, prefix='', **kwargs):
+    def __init__(self, handler=None, formdata=None, obj=None, prefix='', **kwargs):
         """
         Wrap the `formdata` with the `TornadoInputWrapper` and call the base
         constuctor.
         """
+        if handler:
+            formdata = handler
         self._handler = formdata
         super(Form, self).__init__(formdata=TornadoInputWrapper(self._handler), obj=obj, prefix=prefix, **kwargs)
 
     def _get_translations(self):
         return TornadoLocaleWrapper(self._handler.locale)
 
-    # static_url = StringField('static', [InputRequired(), Length(max=32)])
 
 class TornadoInputWrapper(object):
 
@@ -69,7 +70,7 @@ class TornadoInputWrapper(object):
         return len(self._handler.request.arguments)
 
     def __contains__(self, name):
-        return (name in self._handler.request.arguments)
+        return name in self._handler.request.arguments
 
     def getlist(self, name):
         return self._handler.get_arguments(name)

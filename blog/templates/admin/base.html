@@ -1,174 +1,170 @@
 <!DOCTYPE html>
-    <!--[if IE 8]>
-        <html xmlns="http://www.w3.org/1999/xhtml" class="ie8" lang="zh-CN">
-    <![endif]-->
-    <!--[if !(IE 8) ]><!-->
-        <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN">
-    <!--<![endif]-->
-<head>
-    <title>博客管理后台</title>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="blog panel">
+<html>
+<head lang="zh-cn">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="blog">
     <meta name="author" content="leo">
+    <link rel="shortcut icon" href="/static/img/favicon.ico">
+    <title>{% block title %}{{ _("Site_Name") }}{% end %}</title>
+    {% if handler.settings['debug'] %}
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="{{ static_url('css/bootstrap.css') }}" >
 
-    <!-- The styles -->
+    <!-- Custom styles for this template -->
+    <link rel="stylesheet" href="{{ static_url('css/blog-admin.css') }}" >
+    {% else %}
+    <!-- Bootstrap -->
+    <!--<link rel="stylesheet" href="http://cdn.bootcss.com/twitter-bootstrap/3.1.1/css/bootstrap.min.css" >-->
+    <link rel="stylesheet" href="{{ static_url('css/bootstrap.min.css') }}" >
+
+    <!-- Custom styles for this template -->
+    <link rel="stylesheet" href="{{ static_url('css/blog-admin.css') }}" >
+    {% end %}
+
     {% block other-css %}
     {% end %}
-    <link id="bs-css" href="/static/css/bootstrap.min.css" rel="stylesheet">
-    <style type="text/css">
-        body {
-            padding-bottom: 40px;
-        }
 
-        .sidebar-nav {
-            padding: 9px 0;
-        }
-    </style>
-    <link href="/static/css/bootstrap-responsive.min.css" rel="stylesheet">
-    <link href="/static/css/admin.css" rel="stylesheet">
-
-    <!-- The HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
     <!--[if lt IE 9]>
-    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <script src="https://cdn.bootcss.com/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
     <![endif]-->
-
-    <link rel="shortcut icon" href="/static/img/favicon.ico">
 </head>
 
 <body>
-<!-- topbar starts -->
-<div class="navbar">
-    <div class="navbar-inner">
-        <div class="container-fluid">
-            <a class="btn btn-navbar" data-toggle="collapse" data-target=".top-nav.nav-collapse,.sidebar-nav.nav-collapse">
+
+<!-- Fixed top navbar -->
+<div id="header" class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
-            </a>
-            <a class="brand" href="/"> <img alt="Charisma Logo" src="/static/img/logo.png"/> <span>
+            </button>
+            <a class="navbar-brand" href="#">
+                <img alt="Charisma Logo" src="/static/img/logo.png"/>
                 {% if handler.options %}
                     {{ handler.options['blogname'] }}
                 {% else %}
                     Blog
-                {% end %}
-            </span></a>
-
-            <!-- user dropdown starts -->
-            <div class="btn-group pull-right">
-                <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-                    <i class="icon-user"></i><span class="hidden-phone">{{ current_user.login }}</span>
-                    <span class="caret"></span>
-                </a>
-                <ul class="dropdown-menu">
-                    <li><a href="/admin/profile">Profile</a></li>
-                    <li class="divider"></li>
-                    <li><a href="/admin/logout">Logout</a></li>
-                </ul>
-            </div>
-            <!-- user dropdown ends -->
-
-            <div class="top-nav nav-collapse">
-                <ul class="nav">
-                    <li><a href="/" target="_blank">Visit Site</a></li>
-                </ul>
-            </div>
-            <!--/.nav-collapse -->
+                {% end %}</a>
+        </div>
+        <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav navbar-right">
+                <!-- user dropdown starts -->
+                <li class="dropdown">
+                    <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+                        <i class="glyphicon glyphicon-user"></i><span class="hidden-xs">&nbsp;{{ current_user.login }}</span>
+                        <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="#">Action</a></li>
+                        <li><a href="#">Another action</a></li>
+                        <li><a href="#">Something else here</a></li>
+                        <li class="divider"></li>
+                        <li class="dropdown-header">Nav header</li>
+                        <li><a href="#">Separated link</a></li>
+                        <li><a href="#">One more separated link</a></li>
+                    </ul>
+                </li>
+                <!-- user dropdown ends -->
+                <li><a href="/admin/home">Dashboard</a></li>
+                <li><a href="/admin/setting">Settings</a></li>
+                <li><a href="/admin/profile">Profile</a></li>
+                <li><a href="/admin/help">Help</a></li>
+            </ul>
+            <form class="navbar-form navbar-right">
+                <input type="text" class="form-control" placeholder="Search...">
+            </form>
         </div>
     </div>
 </div>
-<!-- topbar ends -->
-<div class="container-fluid">
-    <div class="row-fluid">
 
-        <!-- left menu starts -->
-        <div class="span2 main-menu-span">
-            <div class="well nav-collapse sidebar-nav">
-                <ul class="nav nav-tabs nav-stacked main-menu">
-                    <li class="nav-header hidden-tablet">Main</li>
-                    <li><a class="ajax-link" href="/admin/home"><i class="icon-home"></i><span class="hidden-tablet"> Dashboard</span></a>
-                    </li>
-                    <li><a class="ajax-link" href="/admin/post/add"><i class="icon-edit"></i><span
-                            class="hidden-tablet"> Publish</span></a></li>
-                    <li><a class="ajax-link" href="/admin/post/list"><i class="icon-list-alt"></i><span
-                            class="hidden-tablet"> Post List</span></a></li>
-                    <li><a class="ajax-link" href="/admin/category/list"><i class="icon-list"></i><span
-                            class="hidden-tablet"> Category</span></a></li>
-                    <li><a class="ajax-link" href="/admin/page/list"><i class="icon-th-list"></i><span
-                            class="hidden-tablet"> Page</span></a></li>
-                    <li class="nav-header hidden-tablet">Setting</li>
-                    <li><a class="ajax-link" href="/admin/profile"><i class="icon-user"></i><span class="hidden-tablet"> Profile</span></a>
-                    </li>
-                    <li><a class="ajax-link" href="/admin/setting"><i class="icon-wrench"></i><span
-                            class="hidden-tablet"> Setting</span></a></li>
-                    <li><a class="ajax-link" href="/admin/setting"><i class="icon-wrench"></i><span
-                            class="hidden-tablet"> Post Setting</span></a></li>
-                </ul>
-
-            </div>
-            <!--/.well -->
+<div id="content" class="container-fluid">
+<!--<div id="content" class="container-fluid">-->
+    <div class="row">
+        <!--left menu start-->
+        <div class="col-sm-3 col-md-2 sidebar">
+            <ul class="nav nav-sidebar">
+                <li class="active"><a href="/admin/home"><i class="glyphicon glyphicon-home"></i><span class="hidden-sm">&nbsp;Dashboard</span></a></li>
+                <li><a href="/admin/post"><i class="glyphicon glyphicon-edit"></i><span class="hidden-sm">&nbsp;Publish</span></a></li>
+                <li><a href="/admin/post-list"><i class="glyphicon glyphicon-list-alt"></i><span class="hidden-sm">&nbsp;Post List</span></a></li>
+                <li><a href="/admin/category"><i class="glyphicon glyphicon-list"></i><span class="hidden-sm">&nbsp;Category</span></a></li>
+                <li><a href="/admin/page"><i class="glyphicon glyphicon-tasks"></i><span class="hidden-sm">&nbsp;Page</span></a></li>
+                <li><a href="/admin/file-manager"><i class="glyphicon glyphicon-folder-open"></i><span class="hidden-sm">&nbsp;File Manager</span></a></li>
+            </ul>
+            <ul class="nav nav-sidebar">
+                <li><a href="/admin/profile"><i class="glyphicon glyphicon-user"></i><span class="hidden-sm">&nbsp;Profile</span></a></li>
+                <li><a href="/admin/setting"><i class="glyphicon glyphicon-wrench"></i><span class="hidden-sm">&nbsp;Setting</span></a></li>
+            </ul>
         </div>
-        <!--/span-->
-        <!-- left menu ends -->
+        <!--left menu end-->
 
-        <div id="content" class="span10">
-            <!-- content starts -->
-            <div>
+        <!-- content start -->
+        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main" >
+            <!--content header-->
+            <header>
                 {% block content-nav %}
-                <ul class="breadcrumb">
-                    <li>
-                        <a href="/admin/home">Home</a> <span class="divider">/</span>
-                    </li>
-                    <li>
-                        <a href="#">Blank</a>
-                    </li>
-                </ul>
-                {% end %}
-            </div>
-            {% block content %}
-            <div class="row-fluid sortable">
-                <div class="box span12">
-                    {% block content-header %}
-                    <div class="box-header " data-original-title>
-                    </div>
-                    {% end %}
-
-                    {% block content-body %}
-                    <div class="box-content">
-                    </div>
-                    {% end %}
+                <h1 class="page-header"><a>Dashboard</a></h1>
+                <div class="row">
+                    <ul class="breadcrumb">
+                        <li><a href="/admin/home">Dashboard</a></li>
+                        <li><a href="/admin/post">New Post</a></li>
+                    </ul>
                 </div>
-                <!--/span-->
-            </div>
-            <!--/row-->
-            {% end %}
-            <!-- content ends -->
+                {% end %}
+            </header>
+
+
+            <main>
+                {% block content-body %}
+                <div class="row">
+                    <div class="row placeholders">
+                    </div>
+                </div>
+                {% end %}
+            </main>
+            <!-- Fixed bottom navbar -->
+            <footer>
+                {% block content-footer %}
+                <div>
+
+                </div>
+                {% end %}
+            </footer>
         </div>
-        <!--/#content.span10-->
     </div>
-    <!--/fluid-row-->
+</div><!--</div>-->
 
-    <hr>
-
-    <footer>
-        <p class="pull-left">&copy; <a href="/" target="_blank">Leo</a> 2014</p>
-
-        <p class="pull-right">Powered by: <a href="/">Leo</a></p>
-    </footer>
-
+<!-- Fixed bottom navbar -->
+<div role="navigation" class="navbar navbar-default navbar-fixed-bottom">
+    <br/>
+    <p class="text-center">
+        Copyright &copy; 2014 - Xu Wei -
+        <span class="credit">Powered by <a href="http://www.i733.com">i733</a></span>
+    </p>
 </div>
-<!--/.fluid-container-->
-
 <!-- external javascript
 ================================================== -->
 <!-- Placed at the end of the document so the pages load faster -->
+{% if handler.settings['debug'] %}
+<script src="{{ static_url('js/jquery.js') }}"></script>
+<script src="{{ static_url('js/bootstrap.js') }}"></script>
+<script src="{{ static_url('js/docs.js') }}"></script>
+{% else %}
+<script src="{{ static_url('js/jquery.min.js') }}"></script>
+<!--<script src="http://cdn.bootcss.com/twitter-bootstrap/3.1.1/js/bootstrap.min.js"></script>-->
+<script src="{{ static_url('js/bootstrap.min.js') }}"></script>
+<script src="{{ static_url('js/docs.min.js') }}"></script>
+{% end %}
 
-<!-- jQuery -->
-<script src="/static/js/jquery-1.11.1.min.js"></script>
-<!-- transition / effect library -->
-<script src="/static/js/bootstrap.min.js"></script>
-<script src="/static/js/admin.js"></script>
 {% block other-javascript %}
 {% end %}
+
 </body>
 </html>

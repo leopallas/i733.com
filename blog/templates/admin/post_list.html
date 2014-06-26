@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block content-nav %}
+<div class="row">
+    <ul class="breadcrumb">
+        <li><a href="/admin/home">Dashboard</a></li>
+        <li><a href="/admin/post/list">Post List</a></li>
+        <li class="pull-right">
+            <i class="glyphicon glyphicon-arrow-left"></i>
+            <a href="/admin/home"><span class="hidden-sm">&nbsp;Return to Home </span></a>
+        </li>
+    </ul>
+</div>
+{% end %}
+
+{% block content-body %}
+<div class="row">
+    <div class="col-md-12">
+        <i class="glyphicon glyphicon-pencil"></i><a href="/admin/post/add">&nbsp;Write an article</a>
+        <hr/>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Comment</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for post in posts %}
+                <tr>
+                    <td>{{ post.id }}</td>
+                    <td><a href="/post/id/{{ post.id }}" target="_blank">{{ post.title }}</a></td>
+                    <td>{{ post.author }}</td>
+                    <td>{{ post.comment_count }}</td>
+                    <td class="center">{{ post.date }}</td>
+                    <td class="center">
+                        <a class="btn btn-info" href="/admin/post/edit/{{ post.id }}">
+                           <i class="glyphicon glyphicon-edit"></i>
+                            Edit
+                        </a>
+                        <a class="btn btn-danger" href="/admin/post/delete/{{ post.id }}">
+                            <i class="glyphicon glyphicon-trash"></i>
+                            Delete
+                        </a>
+                    </td>
+                </tr>
+                {% end %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% end %}
